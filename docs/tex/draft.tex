@@ -2,6 +2,7 @@
 \usepackage{graphicx}
 \usepackage{amsmath,amssymb,amsthm}
 %\usepackage[square]{natbib}
+\usepackage{color}
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 
@@ -27,7 +28,7 @@ An example of an energy function that can be solved using DP is the popular Hidd
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[width=0.8\textwidth]{pics/hmm}
+    \includegraphics[width=0.8\textwidth]{pics/hmm.pdf}
     \caption{A canonical HMM}
     \label{hmm1}
 \end{figure}
@@ -48,8 +49,9 @@ X^\star_{1:n} &= \argmax_{X_1,\ldots ,X_n} P(X_1,\ldots,X_n|\mathbf{O_1},\ldots,
 
 
 The main steps in the Viterbi algorithm are : 
-\\
-\\
+
+\vspace*{0.2in}
+
 \textit{Calculation of the Optimal Probability value:}
 \[
   V(i,k) = \left\{
@@ -58,7 +60,8 @@ The main steps in the Viterbi algorithm are :
     P(\mathbf{O_i}|X_i{=}k)\max_{j}\{P(X_{i}{=}k|X_{i-1}{=}j)V(i-1,j)\} & \quad \text{if $2\leq i\leq n$}\\
   \end{array} \right.
 \]
-\\
+
+
 \textit{Retrieval of the optimal sequence corresponding to the optimal probability value:}
 \begin{align*}
 X^\star_n &= \argmax_{k}V(n,k) \\
@@ -68,7 +71,47 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 Here, $V(i,k)$ corresponds to the maximum probability value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
 \subsection{Chain Structured Markov Random Field (CMRF)}
-We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured MRF. The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, 
+We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured Markov Random Field (CMRF). The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, the Max-Product algorithm can be used to solve the CMRF. The CMRF replaces the Conditional probability tables(CPTs) present in the HMM with node and edge potentials. The following figure describes the CMRF.
+
+
+\begin{figure}[h]
+% selecting unit length
+\centering
+% used for centering Figure
+\setlength{\unitlength}{0.3cm}
+\begin{picture}(40,20)(0,0)
+\multiput(5,15)(8,0){2}{\circle{4}}
+\multiput(5,7)(8,0){2}{\circle{4}}
+\multiput(5,7)(8,0){2}{\circle{3.7}}
+\thicklines
+\multiput(7,15)(8,0){2}{\line(1,0){4}}
+\multiput(20,15)(1,0){4}{\circle*{0.3}}
+\multiput(5,13)(8,0){2}{\line(0,-1){4}}
+\put(24,15){\line(1,0){4}}
+\put(30,13){\line(0,-1){4}}
+\thinlines
+\put(30,15){\circle{4}}
+\put(30,7){\circle{4}}
+\put(30,7){\circle{3.7}}
+\put(3.5,14.6){$\phi(X_1)$}
+\put(11.5,14.6){$\phi(X_2)$}
+\put(28.5,14.6){$\phi(X_n)$}
+\put(3.5,6.6){$\phi(O_1)$}
+\put(11.5,6.6){$\phi(O_2)$}
+\put(28.5,6.6){$\phi(O_n)$}
+\put(7,16.5){\footnotesize{$\psi(X_1{,}X_2)$}}
+\put(15,16.5){\footnotesize{$\psi(X_2{,}X_3)$}}
+\put(22.5,16.5){\footnotesize{$\psi(X_{n{-}1}{,}X_n)$}}
+\put(5.2,10.6){\footnotesize{$\psi(X_1{,}O_1)$}}
+\put(13.2,10.6){\footnotesize{$\psi(X_2{,}O_2)$}}
+\put(30.2,10.6){\footnotesize{$\psi(X_n{,}O_n)$}}
+\end{picture}
+
+\end{figure}
+
+%\includegraphics[width=\textwidth]{dummy.pdf}
+
+
 
 
 

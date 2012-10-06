@@ -3,9 +3,11 @@
 \usepackage{amsmath,amssymb,amsthm}
 %\usepackage[square]{natbib}
 
+\DeclareMathOperator*{\argmax}{arg\,max}
+
 \begin{document}
 
-\title{Pareto Optimal Sequence Design using Tree Graphical Models}
+\title{Pareto-Optimal Multistate Protein Design using Tree Graphical Models}
 \author{Subhodeep Moitra, CMU}
 
 \maketitle
@@ -18,14 +20,64 @@ To be added shortly
 To be added shortly \cite{Ambroggio2006}.
 
 \section{Method}
+In this section, we describe and outline aspects of the method. The key idea is that being able to find the minimum energy sequence using dynamic programming(DP) allows us to find pareto optimal solution sequences for all convex combinations of energy functions of multi-states. Thus, we want to cleverly map sequence to an energy value using a function that can be solved using DP.
+
+\subsection{Hidden Markov Model(HMM)}
+An example of an energy function that can be solved using DP is the popular Hidden Markov Model(HMM). The HMM is probabilistic model represented as a chain of hidden markov states where each state has an associated observed variable. 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/hmm}
+    \caption{A canonical HMM}
+    \label{hmm1}
+\end{figure}
+
+
+The graphical representation of the HMM factorizes according to the following probability distribution :
+
+\begin{equation}
+P(X_1,\ldots,X_n|\mathbf{O_1},\ldots,\mathbf{O_n}) = P(X_1)\prod_{i=1}^{n}{P(\mathbf{O_i}|X_i)}\prod_{i=1}^{n-1}{P(X_{i+1}|X_i)}
+\end{equation}
+
+Note, that the chain structure gives rise to a distribution where the dependence between random variables $X_1 to X_n$ is only through adjacent random variables $X_i and X_{i+1}$. This interesting decomposition allows us to find the minimum energy/maximum probability sequence efficiently using DP. The DP solution to a HMM is the famous Viterbi Decoding algorithm. In particular, we want the solution of :
+
+\begin{align*}
+X^\star_{1:n} &= \argmax_{X_1,\ldots ,X_n} P(X_1,\ldots,X_n|\mathbf{O_1},\ldots,\mathbf{O_n})\\
+  &= \argmax_{X_1,\ldots ,X_n}P(X_1)\prod_{i=1}^{n}{P(\mathbf{O_i}|X_i)}\prod_{i=1}^{n-1}{P(X_{i+1}|X_i)}
+\end{align*}
+
+
+The main steps in the Viterbi algorithm are : 
+\\
+\\
+\textit{Calculation of the Optimal Probability value:}
+\[
+  V(i,k) = \left\{
+  \begin{array}{l l}
+    P(\mathbf{O_1}|X_1{=}k)P(X_1{=}k) & \quad \text{if $i=1$}\\
+    P(\mathbf{O_i}|X_i{=}k)\max_{j}\{P(X_{i}{=}k|X_{i-1}{=}j)V(i-1,j)\} & \quad \text{if $2\leq i\leq n$}\\
+  \end{array} \right.
+\]
+\\
+\textit{Retrieval of the optimal sequence corresponding to the optimal probability value:}
+\begin{align*}
+X^\star_n &= \argmax_{k}V(n,k) \\
+X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
+\end{align*}
+
+Here, $V(i,k)$ corresponds to the maximum probability value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
+
+\subsection{Chain Structured Markov Random Field (CMRF)}
+We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured MRF. The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, 
+
+
+
+\subsection{Convex combinations of Energy Functions}
 
 \begin{equation}
     \label{simple_equation}
     \alpha = \sqrt{ \beta }
 \end{equation}
-
-\subsection{Subsection Heading Here}
-Write your subsection text here.
 
 %\begin{figure}
 %    \centering

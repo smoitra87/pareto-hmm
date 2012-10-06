@@ -1,0 +1,7 @@
+*.pyx
+*~
+docs/tex/*
+!docs/tex/*.tex
+!docs/tex/*.bib
+!docs/tex/*.py
+!docs/tex/*.sh

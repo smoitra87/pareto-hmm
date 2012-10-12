@@ -14,6 +14,9 @@ bibtex ${fbase}.aux
 pdflatex ${fn}
 pdflatex ${fn}
 
+# Display the generated pdf file
+test -e ${fbase}.pdf && ( evince ${fbase}.pdf & ) || ( echo \
+  "File ${fbase}.pdf does not exist" >&2 )
 
 
 

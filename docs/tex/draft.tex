@@ -71,7 +71,7 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 Here, $V(i,k)$ corresponds to the maximum probability value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
 \subsection{Chain Structured Markov Random Field (CMRF)}
-We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured Markov Random Field (CMRF). The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, the Max-Product algorithm can be used to solve the CMRF. The CMRF replaces the Conditional probability tables(CPTs) present in the HMM with node and edge potentials. The following figure describes the CMRF.
+We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured Markov Random Field (CMRF). The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, the Max-Product algorithm can be used to solve the CMRF. The CMRF replaces the Conditional probability tables(CPTs) present in the HMM with node and edge potentials. The following figure describes the CMRF : 
 
 
 \begin{figure}[h]

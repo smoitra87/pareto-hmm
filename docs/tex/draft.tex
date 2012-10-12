@@ -153,15 +153,18 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 
 Here, $V(i,k)$ corresponds to the maximum functional value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
+\subsection{Multistate protein design}
+The problem of protein structure prediction is finding the lowest energy structure given a particular sequence. Protein design is known as the inverse protein structure prediction problem and involves finding the lowest energy sequence for a given structure. Multistate protein design generalizes protein design by asking to find a sequence that is stable for multiple structures. This is often posed as a  multi-objective optimization problem \ref{}.
 
-\subsection{Convex combinations of Energy Functions}
-To be added shortly
-%\begin{figure}
-%    \centering
-%    \includegraphics[width=3.0in]{myfigure}
-%    \caption{Simulation Results}
-%    \label{simulationfigure}
-%\end{figure}
+\paragraph*{} Suppose, $E_A(X)$ and $E_B(X)$ are the energies of a sequence in state A and state B respectively. Then one way of doing multistate design would be to find $X^* = \arg \min_{X} E_A(X) + E_B(X)$. This would be the sequence that is likely to be stable under both state A and state B. Building on this idea, we might prefer to find a sequence $X^*$ that is more stable in one form than the other. We can thus solve for $X^* = \arg \min_{X} \theta_AE_A(X) + \theta_BE_B(X)$ where $\theta_A+\theta_B=1$ and $\theta_A,\theta_B \geq 0$. This sequence might be different from the solution to the previous optimization problem. By trying different combinations of $\theta_A$ and $\theta_B$ it is possible to find a number of different low energy sequences. However, it is not possible to try all possible values of $\theta$, nor is it possible to know which ones to pick to get a variety of different sequences.
+
+\paragraph*{} We will present an algorithm which finding optimal sequences for all combinations of $\theta_A$ and $\theta_B$. This is known as the pareto optimal frontier of the sequence space. See Figure~\ref{fig:pareto1} for an illustration of the pareto-optimal frontier. This frontier is pareto-optimal in the sense that it is not possible to unilaterally improve the energy function value of one state without adversely affecting the energy value of the other state. Thus each sequence on the frontier is optimal for certain sets of $\theta_A$ and $\theta_B$. 
+
+\paragraph*{} Convex hull procedure
+
+
+
+
 
 \section{Conclusion}
 Write your conclusion here.

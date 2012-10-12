@@ -74,7 +74,8 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 Here, $V(i,k)$ corresponds to the maximum probability value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
 \subsection{Chain Structured Markov Random Field (CMRF)}
-We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured Markov Random Field (CMRF). The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, the Max-Product algorithm can be used to solve the CMRF. The CMRF replaces the Conditional probability tables(CPTs) present in the HMM with node and edge potentials. The following figure describes the CMRF : 
+We will consider a generalization of the HMM, to an undirected graphical model. This is known as the chain structured Markov Random Field (CMRF). The purpose of generalizing to an MRF is that it gives more flexibility in the form of the energy functions and also that there are more general inference algorithms that can be used. In particular, the Max-Product algorithm can be used to solve the CMRF. The CMRF replaces the Conditional probability tables(CPTs) present in the HMM with node and edge potentials. Figure~\ref{fig:CMRF} describes a CMRF. The max-product algorithm in the case of the CMRF is actually very similar to the dynamic programming solution of the HMM. 
+
 
 
 \begin{figure}[h]
@@ -109,12 +110,49 @@ We will consider a generalization of the HMM, to an undirected graphical model. 
 \put(13.2,10.6){\footnotesize{$\psi(X_2{,}O_2)$}}
 \put(30.2,10.6){\footnotesize{$\psi(X_n{,}O_n)$}}
 \end{picture}
-
+\label{fig:CMRF}
+\caption{A chain structured Markov Random Field. Probability of a sequence assignment is defined as a function of the node and edge potentials}
 \end{figure}
+
+\pagebreak
+
+The probability of the a sequence assignment is defined as follows :
+\begin{align*}
+P(X_1,X_2,\dotsc,X_n) &= \frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
+\text{where} \quad Z &= \sum_{X_1,X_2,\dotsc,X_n}\left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\end{align*}
 
 %\includegraphics[width=\textwidth]{dummy.pdf}
 
-\pagebreak
+$Z$ is a normalizing constant known as the partition function. The value of $Z$ can be calculated efficiently using the sum-product algorithm. To calculate the maximum probability assignment $X^*$, we don't even need $Z$. $X^*$ can be evaluated using a dynamic programming formulation known as the max product algorithm. 
+\begin{align*}
+X^* &= \argmax_{\mathbf{X}}P(\mathbf{X})\\
+ &= \argmax_{X_1,X_2,\dotsc,X_n}\frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
+ &= \argmax_{X_1,X_2,\dotsc,X_n}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}
+\end{align*}
+
+ The main steps in the max-product algorithm are : 
+
+\vspace*{0.2in}
+
+\textit{Calculation of the Optimal Probability value:}
+\[
+  V(i,k) = \left\{
+  \begin{array}{l l}
+    \phi(\mathbf{O_1})\psi(\mathbf{O_1},X_1{=}k)\phi(X_1{=}k) & \quad \text{if $i=1$}\\
+    \phi(\mathbf{O_i})\phi(X_i{=}k)\psi(\mathbf{O_i},X_i{=}k)\max_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\} & \quad \text{if $2\leq i\leq n$}\\
+  \end{array} \right.
+\]
+
+
+\textit{Retrieval of the optimal sequence corresponding to the optimal probability value:}
+\begin{align*}
+X^\star_n &= \argmax_{k}V(n,k) \\
+X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
+\end{align*}
+
+Here, $V(i,k)$ corresponds to the maximum functional value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
+
 
 \subsection{Convex combinations of Energy Functions}
 To be added shortly

@@ -166,23 +166,23 @@ The Quick hull procedure is used to find all the points on the pareto optimal fr
 \begin{algorithm}
 \caption{Quick Hull} \label{algo:quickhull1}
 \begin{algorithmic}
-\For{each position $i$}
-	\For{each rotamer $r$ at $i$}
-		\For{each candidate rotamer $t$ at $i$}
-			\State $X \gets E_i(r_i^r) - E_i(r_i^t)$
-			\ForAll{positions $j \not= i$} 
-				\ForAll{rotamers $u$ at position $j$}
-					\State $Y = \min_u\left[E_{ij}(r_i^r,r_j^u) - E_{ij}(r_i^t,r_j^u) \right]$
-				\EndFor
-				\State $X \gets X + Y$
-			\EndFor
-			\If{$X>0$}
-				\State eliminate $r_i^r$
-				\State break
-			\EndIf
-		\EndFor
-	\EndFor
-\EndFor
+\State Initialize queue $Q \gets \emptyset$
+\State Find $X_A \gets \arg \min_X E_A(X) $
+\State Find $X_B \gets \arg \min_X E_B(X) $
+\State Enqueue $(X_A,X_B)$
+\State $C_H \gets \{X_A,X_B\}$
+\Repeat
+	\State Dequeue from Q a pair $(X_1,X_2)$ and assert($E_A(X_1) < E_A(X_2)$)
+	\State $m \gets \frac{E_B(X_1)-E_B(X_2)}{E_A(X_1)-E_A(X_2)}$
+	\State $\theta_A \gets \frac{-m}{1-m}$
+	\State $\theta_B \gets \frac{1}{1-m}$
+	\State Find $X_{AB} \gets \arg \min_X \theta_A E_A(X) + \theta_B E_B(X) $
+	\If{$X_{AB} \neq X_A$ and $X_{AB} \neq X_B$ }
+		\State $C_H \gets C_H \cup \{X_{AB}\}$
+		\State Enqueue $(X_A,X_{AB})$ and $(X_{AB},X_B)$
+	\EndIf
+\Until{Q is empty}
+\State \Return $C_H$
 \end{algorithmic}
 \end{algorithm}
 
@@ -198,6 +198,7 @@ The Quick hull procedure is used to find all the points on the pareto optimal fr
 \pagebreak
 
 \subsection{Convex combinations of CMRFs}
+For multi-state protein design we combine the energy functions as follows. This has the interesting propertu
 
 
 \begin{figure}[h]

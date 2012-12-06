@@ -7,6 +7,7 @@
 \usepackage{algorithm}
 
 \DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
 
 \begin{document}
 
@@ -215,9 +216,35 @@ X_A &= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\p
 Taking the $-\log$ also offers benefits as it lets us combine convex combinations of CMRF energy functions and gives rise to new graphical models called Tree MRFS (TMRFs). These TMRFs are conceptually very similar to CMRFs and possess the properties of efficient inference and decoding. 
 
 \begin{align*}
-X_A &= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+X_A &= \arg \min_X E_A(X) \\
+&= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]\\
+&= \arg \min_X -\left[{\sum_{i=1}^{n} \log\phi(X_i)+\sum_{i=1}^{n} \log\phi(\mathbf{O^A_i})+\sum_{i=1}^{n} \log\psi(\mathbf{O^A_i},X_i)+ \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}}\right] \\
+&= \arg \min_X -\left[{\sum_{i=1}^{n} \log\phi(X_i)+\sum_{i=1}^{n} \log\psi(\mathbf{O^A_i},X_i)+ \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}}\right]
 \end{align*}
 
+Similarly,
+\begin{align*}
+X_B &= \arg \min_X E_B(X) \\
+&= \arg \min_X -\left[{\sum_{i=1}^{n} \log\phi(X_i)+\sum_{i=1}^{n} \log\psi(\mathbf{O^B_i},X_i)+ \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}}\right]
+\end{align*}
+\\
+Taking the convex combination of the energy functions we get 
+\begin{align*}
+X_{AB} &= \arg \min_X \theta_A E_A(X) + \theta_B E_B(X) \\
+\text{s.t} &\quad  \theta_A + \theta_B  = 1 \\
+& \theta_A, \theta_B \geq 0
+\end{align*}
+Expanding $E_A(X)$ and $E_B(X)$ we get, 
+\begin{align*}
+X_{AB} &= \arg \min_X -\theta_A \left[{\sum_{i=1}^{n} \log\phi(X_i)+\sum_{i=1}^{n} \log\psi(\mathbf{O^A_i},X_i)+ \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}}\right] \\
+&-\theta_B \left[{\sum_{i=1}^{n} \log\phi(X_i)+\sum_{i=1}^{n} \log\psi(\mathbf{O^B_i},X_i)+ \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}}\right] \\
+&= \arg \min_X -\left( \sum_{i=1}^{n}{\log\phi(X_i)} + \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}\right)\\ 
+ &-\left( \sum_{i=1}^{n}{(\theta_A\log\psi(\mathbf{O^A_i},X_i) + \theta_B\log\psi(\mathbf{O^B_i},X_i))} \right) \\
+ &= \arg \min_X -\left( \sum_{i=1}^{n}{\log\phi(X_i)} + \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}\right)\\ 
+ &-\left( \sum_{i=1}^{n}{(\log\psi(\mathbf{O^A_i},X_i)^{\theta_A} + \log\psi(\mathbf{O^B_i},X_i)^{\theta_B})} \right)
+\end{align*}
+
+This looks very much like decoding on a CMRF with the added change that the emission edge potential values are exponentiated. In fact this distribution factorizes according to the TMRF shown in Figure~\ref{fig:CMRF2}.
 
 
 
@@ -258,20 +285,56 @@ X_A &= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\p
 \put(7,16.5){\footnotesize{$\psi(X_1{,}X_2)$}}
 \put(15,16.5){\footnotesize{$\psi(X_2{,}X_3)$}}
 \put(22.5,16.5){\footnotesize{$\psi(X_{n{-}1}{,}X_n)$}}
-\put(5.2,10.6){\footnotesize{$\psi(X_1{,}O^A_1)$}}
-\put(13.2,10.6){\footnotesize{$\psi(X_2{,}O^A_2)$}}
-\put(30.2,10.6){\footnotesize{$\psi(X_n{,}O^A_n)$}}
-\put(5.2,18.6){\footnotesize{$\psi(X_1{,}O^B_1)$}}
-\put(13.2,18.6){\footnotesize{$\psi(X_2{,}O^B_2)$}}
-\put(30.2,18.6){\footnotesize{$\psi(X_n{,}O^B_n)$}}
+\put(5.2,10.6){\footnotesize{$\psi^{\theta_A}(X_1{,}O^A_1)$}}
+\put(13.2,10.6){\footnotesize{$\psi^{\theta_A}(X_2{,}O^A_2)$}}
+\put(30.2,10.6){\footnotesize{$\psi^{\theta_A}(X_n{,}O^A_n)$}}
+\put(5.2,18.6){\footnotesize{$\psi^{\theta_B}(X_1{,}O^B_1)$}}
+\put(13.2,18.6){\footnotesize{$\psi^{\theta_B}(X_2{,}O^B_2)$}}
+\put(30.2,18.6){\footnotesize{$\psi^{\theta_B}(X_n{,}O^B_n)$}}
 \end{picture}
 \label{fig:CMRF2}
-\caption{A Tree structured Markov Random Field that is used for modelling multi-state protein design.}
+\caption{A Tree structured Markov Random Field that is used for modelling multi-state protein design. This Tree structured MRF results from taking a convex combination $\theta_A E_A(X) + \theta_B E_B(X)$ of the log likelihoods of CMRFs for State A and State B }
 \end{figure}
 
 \pagebreak
 
-\subsection{Convex Hull Procedure on CMRFs}
+\subsection{Max-Decoding on TMRFs}
+In the previous section we showed how the convex combination of negative log likelihoods of CMRFs can be used to construct a TMRF. Here we will show how efficient decoding can be performed on the TMRF using the similar variant of Viterbi decoding.  
+
+\begin{align*}
+X_{AB} &= \argmin_X \left( \theta_A E_A(X) + \theta_B E_B(X)\right) \\
+&= \arg \min_X \left( -\sum_{i=1}^{n}{\log\phi(X_i)} + \sum_{i=1}^{n-1}{\log\psi(X_i,X_{i+1})}\right)\\ 
+ &-\left( \sum_{i=1}^{n}{(\log\psi(\mathbf{O^A_i},X_i)^{\theta_A} + \log\psi(\mathbf{O^B_i},X_i)^{\theta_B})} \right) \\
+ &= \argmax_{X}\log\left( \prod_{i=1}^{n}{\phi(X_i)\psi(\mathbf{O^A_i},X_i)^{\theta_A} \psi(\mathbf{O^B_i},X_i)^{\theta_B}}\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}\right) \\
+ &= \argmax_{X}\left( \prod_{i=1}^{n}{\phi(X_i)\psi(\mathbf{O^A_i},X_i)^{\theta_A} \psi(\mathbf{O^B_i},X_i)^{\theta_B}}\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}\right)
+\end{align*}
+
+ The main steps in the max-product algorithm are : 
+
+\vspace*{0.2in}
+
+\textit{Calculation of the Optimal Probability value:}
+\[
+  V(i,k) = \left\{
+  \begin{array}{l l}
+    \psi(\mathbf{O^A_1},X_1{=}k)^{\theta_A}\psi(\mathbf{O^B_1},X_1{=}k)^{\theta_B}\phi(X_1{=}k) & \quad \text{if $i=1$}\\
+    \phi(X_i{=}k)\psi(\mathbf{O^A_i},X_i{=}k)^{\theta_A}\psi(\mathbf{O^B_1},X_1{=}k)^{\theta_B}\cdots\\
+    \max_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\} & \quad \text{if $2\leq i\leq n$}\\
+  \end{array} \right.
+\]
+
+
+\textit{Retrieval of the optimal sequence corresponding to the optimal probability value:}
+\begin{align*}
+X^\star_n &= \argmax_{k}V(n,k) \\
+X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
+\end{align*}
+
+Here, $V(i,k)$ corresponds to the maximum functional value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O^A_{1:i}}$ and $\mathbf{O^B_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
+
+\subsection{Convex Hull Procedure on TMRFs}
+In the previous section we showed how to find $X_{AB} = \argmin_X \left( \theta_A E_A(X) + \theta_B E_B(X)\right)$, for any convex combination with $\theta_A$ and $\theta_B$.In this section, we will put it all together to define a comprehensive algorithm that can be used for finding the entire pareto frontier for sequence design tasks.
+
 
 \subsubsection{Normalizing CMRFs}
 So far we have been assuming that the $E_A(X)$ and $E_B(X)$ lies in the positive quadrant. However this assumption need not not be true under our CMRF model. This is because it is possible that $f(X) > 1$ and conversely $-\log f(X) < 0$. This can lead to the energy function values being negative as shown in Figure~\ref{fig:cvxfront2}. We can potentially fix this be normalizing energy the Likelihood function with the partition function Z. The partitions can be efficiently calculated using the sum-product algorithm for trees. However we will show that this step is not needed. 

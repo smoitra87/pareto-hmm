@@ -333,8 +333,86 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 Here, $V(i,k)$ corresponds to the maximum functional value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O^A_{1:i}}$ and $\mathbf{O^B_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
 \subsection{Convex Hull Procedure on TMRFs}
-In the previous section we showed how to find $X_{AB} = \argmin_X \left( \theta_A E_A(X) + \theta_B E_B(X)\right)$, for any convex combination with $\theta_A$ and $\theta_B$.In this section, we will put it all together to define a comprehensive algorithm that can be used for finding the entire pareto frontier for sequence design tasks.
+In the previous section we showed how to find $X_{AB} = \argmin_X \left( \theta_A E_A(X) + \theta_B E_B(X)\right)$, for any convex combination with $\theta_A$ and $\theta_B$.In this section, we will put it all together in Algorithm~\ref{algo:pareto1} and Algorithm~\ref{algo:pareto2} to define a comprehensive algorithm that can be used for finding the entire pareto frontier for sequence design tasks.
 
+\begin{algorithm}
+\caption{Pareto-Optimal MultiState Protein Design} \label{algo:pareto1}
+\begin{algorithmic}[1]
+\Procedure{Pareto-Frontier}{$\phi,\psi,O^A,O^B$}\Comment{Find Pareto frontier}
+	\State Initialize queue $Q \gets \emptyset$
+	\State $X_A \gets$ \Call{CMRF-Decode}{$\phi,\psi,O^A$}  \Comment{$\argmin_X E_A(X)$}
+	\State $X_B \gets$ \Call{CMRF-Decode}{$\phi,\psi,O^B$}  \Comment{$\argmin_X E_B(X)$}
+	\State Enqueue $(X_A,X_B)$
+	\State $C_H \gets \{X_A,X_B\}$
+	\Repeat
+		\State Dequeue from Q a pair $(X_1,X_2)$ and assert($E_A(X_1) < E_A(X_2)$)
+		\State $m \gets \frac{E_B(X_1)-E_B(X_2)}{E_A(X_1)-E_A(X_2)}$
+		\State $\theta_A \gets \frac{-m}{1-m}$
+		\State $\theta_B \gets \frac{1}{1-m}$
+		\State $X_{AB} \gets $\Call{TMRF-Decode}{$\phi,\psi,O^A,O^B,\theta_A,\theta_B$}
+		\Statex \Comment{$\argmin_X \theta_A E_A(X) + \theta_B E_B(X)$}		
+		\If{$X_{AB} \neq X_A$ and $X_{AB} \neq X_B$ }
+			\State $C_H \gets C_H \cup \{X_{AB}\}$
+			\State Enqueue $(X_A,X_{AB})$ and $(X_{AB},X_B)$
+		\EndIf
+	\Until{Q is empty}
+	\State \Return $C_H$
+\EndProcedure
+\Statex 
+\Procedure{CMRF-Decode}{$\phi,\psi,O^A$}\Comment{Max decode CMRF}
+	\State Allocate $V[N][K]$ \Comment{N is length of seq,K is numAA }
+	\State Allocate $X_A[N]$	
+	\For{$k \gets 1,K$}
+		\State $V[1][k] \gets \psi(\mathbf{O^A_1},X_1{=}k)\phi(X_1{=}k)$
+	\EndFor	
+	\For{$i \gets 1,N$}
+		\For{$k \gets 1,K$}
+			\State $V[i][k] \gets \phi(X_i{=}k)\psi(\mathbf{O^A_i},X_i{=}k) \max_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\}$
+			\State $Ptr[i][k] \gets \argmax_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\} $
+		\EndFor		
+	\EndFor
+	\Statex \Comment{Now retrieve the pointers}
+	\State $X_A[N] \gets \argmax_{k}V[N][k]$ 
+	\For{$i \gets N-1,1$}
+		\State	$X_A[i] \gets Ptr[i+1][X_A[i+1]]$
+	\EndFor
+	\State \bf{return} $X_A$
+\EndProcedure
+\algstore{paretobreak}
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+\caption{Pareto continued} \label{algo:pareto2}
+\begin{algorithmic}[1]
+\algrestore{paretobreak}
+
+\Procedure{TMRF-Decode}{$\phi,\psi,O^A,O^B,\theta_A,\theta_B$}\Comment{Max Decode TMRF}
+	\State Allocate $V[N][K]$ \Comment{N is length of seq,K is numAA }
+	\State Allocate $X_{AB}[N]$	
+	\For{$k \gets 1,K$}
+		\State $V[1][k] \gets \psi(\mathbf{O^A_1},X_1{=}k)^{\theta_A}\psi(\mathbf{O^B_1},X_1{=}k)^{\theta_B}\phi(X_1{=}k)$
+	\EndFor	
+	\For{$i \gets 1,N$}
+		\For{$k \gets 1,K$}
+			\State $V[i][k] \gets \phi(X_i{=}k)\psi(\mathbf{O^A_i},X_i{=}k)^{\theta_A}\psi(\mathbf{O^B_1},X_1{=}k)^{\theta_B}
+    \max_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\}$
+			\State $Ptr[i][k] \gets \argmax_{j}\{\psi(X_{i}{=}k,X_{i-1}{=}j)V(i-1,j)\} $
+		\EndFor		
+	\EndFor
+	\Statex \Comment{Now retrieve the pointers}
+	\State $X_{AB}[N] \gets \argmax_{k}V[N][k]$ 
+	\For{$i \gets N-1,1$}
+		\State	$X_{AB}[i] \gets Ptr[i+1][X_{AB}[i+1]]$
+	\EndFor
+	\State \bf{return} $X_{AB}$
+\EndProcedure
+
+\end{algorithmic}
+\end{algorithm}
+
+
+\pagebreak
 
 \subsubsection{Normalizing CMRFs}
 So far we have been assuming that the $E_A(X)$ and $E_B(X)$ lies in the positive quadrant. However this assumption need not not be true under our CMRF model. This is because it is possible that $f(X) > 1$ and conversely $-\log f(X) < 0$. This can lead to the energy function values being negative as shown in Figure~\ref{fig:cvxfront2}. We can potentially fix this be normalizing energy the Likelihood function with the partition function Z. The partitions can be efficiently calculated using the sum-product algorithm for trees. However we will show that this step is not needed. 

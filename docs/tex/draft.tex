@@ -3,6 +3,8 @@
 \usepackage{amsmath,amssymb,amsthm}
 %\usepackage[square]{natbib}
 \usepackage{color}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 
@@ -17,8 +19,6 @@
 The problem of protein design is to find a protein sequence which folds into a given protein structure. Multistate protein design generalizes this to find a protein sequence which folds into multiple protein states. This involves finding a sequence that is not only stable in one state but in the other state as well. This problem can be posed as a multi-objective optimization problem. By making suitable modelling approximations using graphical models, I propose to solve this multi-state design problem that allows the discovery of a set of sequences that are pareto optimal. Pareto-optimality in this context refers to the property that it is not possible to improve stability in one state without hurting the stability of the other state. Theory  , experiments and conclusions will be presented. 
 \end{abstract}
 
-\clearpage
-\newpage
 
 \section{Introduction}
 To be added shortly \cite{Ambroggio2006}.
@@ -118,8 +118,8 @@ We will consider a generalization of the HMM, to an undirected graphical model. 
 
 The probability of the a sequence assignment is defined as follows :
 \begin{align*}
-P(X_1,X_2,\dotsc,X_n) &= \frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
-\text{where} \quad Z &= \sum_{X_1,X_2,\dotsc,X_n}\left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+P(X_1,X_2,\dotsc,X_n) &= \frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_i})\psi(\mathbf{O_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
+\text{where} \quad Z &= \sum_{X_1,X_2,\dotsc,X_n}\left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_i})\psi(\mathbf{O_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
 \end{align*}
 
 %\includegraphics[width=\textwidth]{dummy.pdf}
@@ -127,8 +127,8 @@ P(X_1,X_2,\dotsc,X_n) &= \frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\
 $Z$ is a normalizing constant known as the partition function. The value of $Z$ can be calculated efficiently using the sum-product algorithm. To calculate the maximum probability assignment $X^*$, we don't even need $Z$. $X^*$ can be evaluated using a dynamic programming formulation known as the max product algorithm. 
 \begin{align*}
 X^* &= \argmax_{\mathbf{X}}P(\mathbf{X})\\
- &= \argmax_{X_1,X_2,\dotsc,X_n}\frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
- &= \argmax_{X_1,X_2,\dotsc,X_n}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_1})\psi(\mathbf{O_1},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}
+ &= \argmax_{X_1,X_2,\dotsc,X_n}\frac{1}{Z}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_i})\psi(\mathbf{O_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})} \\
+ &= \argmax_{X_1,X_2,\dotsc,X_n}\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O_i})\psi(\mathbf{O_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}
 \end{align*}
 
  The main steps in the max-product algorithm are : 
@@ -158,11 +158,144 @@ The problem of protein structure prediction is finding the lowest energy structu
 
 \paragraph*{} Suppose, $E_A(X)$ and $E_B(X)$ are the energies of a sequence in state A and state B respectively. Then one way of doing multistate design would be to find $X^* = \arg \min_{X} E_A(X) + E_B(X)$. This would be the sequence that is likely to be stable under both state A and state B. Building on this idea, we might prefer to find a sequence $X^*$ that is more stable in one form than the other. We can thus solve for $X^* = \arg \min_{X} \theta_AE_A(X) + \theta_BE_B(X)$ where $\theta_A+\theta_B=1$ and $\theta_A,\theta_B \geq 0$. This sequence might be different from the solution to the previous optimization problem. By trying different combinations of $\theta_A$ and $\theta_B$ it is possible to find a number of different low energy sequences. However, it is not possible to try all possible values of $\theta$, nor is it possible to know which ones to pick to get a variety of different sequences.
 
-\paragraph*{} We will present an algorithm which finding optimal sequences for all combinations of $\theta_A$ and $\theta_B$. This is known as the pareto optimal frontier of the sequence space. See Figure~\ref{fig:pareto1} for an illustration of the pareto-optimal frontier. This frontier is pareto-optimal in the sense that it is not possible to unilaterally improve the energy function value of one state without adversely affecting the energy value of the other state. Thus each sequence on the frontier is optimal for certain sets of $\theta_A$ and $\theta_B$. 
+\paragraph*{} We will present an algorithm for finding optimal sequences for all combinations of $\theta_A$ and $\theta_B$. This is known as the pareto optimal frontier of the sequence space. See Figure~\ref{fig:cvxfront} for an illustration of the pareto-optimal frontier. This frontier is pareto-optimal in the sense that it is not possible to unilaterally improve the energy function value of one state without adversely affecting the energy value of the other state. Thus each sequence on the frontier is optimal for certain sets of $\theta_A$ and $\theta_B$. 
 
-\paragraph*{} Convex hull procedure
+\subsubsection*{Quick hull procedure}
+The Quick hull procedure is used to find all the points on the pareto optimal frontier. The quick hull is traditionally used to find the convex hull of a set of points. In our case we are only interested in the lower left convex frontier. The algorithm in pseudo code is described in Algorithm~\ref{algo:quickhull1}.
+
+\begin{algorithm}
+\caption{Quick Hull} \label{algo:quickhull1}
+\begin{algorithmic}
+\For{each position $i$}
+	\For{each rotamer $r$ at $i$}
+		\For{each candidate rotamer $t$ at $i$}
+			\State $X \gets E_i(r_i^r) - E_i(r_i^t)$
+			\ForAll{positions $j \not= i$} 
+				\ForAll{rotamers $u$ at position $j$}
+					\State $Y = \min_u\left[E_{ij}(r_i^r,r_j^u) - E_{ij}(r_i^t,r_j^u) \right]$
+				\EndFor
+				\State $X \gets X + Y$
+			\EndFor
+			\If{$X>0$}
+				\State eliminate $r_i^r$
+				\State break
+			\EndIf
+		\EndFor
+	\EndFor
+\EndFor
+\end{algorithmic}
+\end{algorithm}
 
 
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/convexfront.pdf}
+    \caption{This figure illustrates the concept of a pareto-optimal convex frontier. The red curve is defined as the pareto-frontier and represents the tradeoff between $E_A(X)$ and $E_B(X)$. P1 and P2 are two points on the pareto frontier. P1 is better in terms of Energy A and P2 is better in terms of Energy B but not vice versa, thus showing a trade-off. The region D2(blue rectangle) is strictly dominated by P2, the region D1(green rectangle) is dominated by P1 and the region D12(yellow) is dominated by both P1 and P2. Domination means that points in these regions are clearly worse in both Energy A and Energy B. Also, notice the perpendicular drawn from the green dashed line and blue dashed line meets the pareto-frontier at P1 and P2 respectively.}
+    \label{fig:cvxfront}
+\end{figure}
+
+\pagebreak
+
+\subsection{Convex combinations of CMRFs}
+
+
+\begin{figure}[h]
+% selecting unit length
+\centering
+% used for centering Figure
+\setlength{\unitlength}{0.3cm}
+\begin{picture}(40,25)(0,0)
+\multiput(5,15)(8,0){2}{\circle{4}}
+\multiput(5,7)(8,0){2}{\circle{4}}
+\multiput(5,7)(8,0){2}{\circle{3.7}}
+\multiput(5,23)(8,0){2}{\circle{4}}
+\multiput(5,23)(8,0){2}{\circle{3.7}}
+\thicklines
+\multiput(7,15)(8,0){2}{\line(1,0){4}}
+\multiput(20,15)(1,0){4}{\circle*{0.3}}
+\multiput(5,13)(8,0){2}{\line(0,-1){4}}
+\multiput(5,17)(8,0){2}{\line(0,1){4}}
+\put(24,15){\line(1,0){4}}
+\put(30,13){\line(0,-1){4}}
+\put(30,17){\line(0,1){4}}
+\thinlines
+\put(30,15){\circle{4}}
+\put(30,7){\circle{4}}
+\put(30,7){\circle{3.7}}
+\put(30,23){\circle{4}}
+\put(30,23){\circle{3.7}}
+\put(3.5,14.6){$\phi(X_1)$}
+\put(11.5,14.6){$\phi(X_2)$}
+\put(28.5,14.6){$\phi(X_n)$}
+\put(3.5,6.6){$\phi(O^A_1)$}
+\put(11.5,6.6){$\phi(O^A_2)$}
+\put(28.5,6.6){$\phi(O^A_n)$}
+\put(3.5,22.6){$\phi(O^B_1)$}
+\put(11.5,22.6){$\phi(O^B_2)$}
+\put(28.5,22.6){$\phi(O^B_n)$}
+\put(7,16.5){\footnotesize{$\psi(X_1{,}X_2)$}}
+\put(15,16.5){\footnotesize{$\psi(X_2{,}X_3)$}}
+\put(22.5,16.5){\footnotesize{$\psi(X_{n{-}1}{,}X_n)$}}
+\put(5.2,10.6){\footnotesize{$\psi(X_1{,}O^A_1)$}}
+\put(13.2,10.6){\footnotesize{$\psi(X_2{,}O^A_2)$}}
+\put(30.2,10.6){\footnotesize{$\psi(X_n{,}O^A_n)$}}
+\put(5.2,18.6){\footnotesize{$\psi(X_1{,}O^B_1)$}}
+\put(13.2,18.6){\footnotesize{$\psi(X_2{,}O^B_2)$}}
+\put(30.2,18.6){\footnotesize{$\psi(X_n{,}O^B_n)$}}
+\end{picture}
+\label{fig:CMRF2}
+\caption{A Tree structured Markov Random Field that is used for modelling multi-state protein design.}
+\end{figure}
+
+\pagebreak
+
+\subsection{Convex Hull Procedure on CMRFs}
+
+\subsubsection{Normalizing CMRFs}
+So far we have been assuming that the $E_A(X)$ and $E_B(X)$ lies in the positive quadrant. However this assumption need not not be true under our CMRF model. This is because it is possible that $f(X) > 1$ and conversely $-\log f(X) < 0$. This can lead to the energy function values being negative as shown in Figure~\ref{fig:cvxfront2}. We can potentially fix this be normalizing energy the Likelihood function with the partition function Z. The partitions can be efficiently calculated using the sum-product algorithm for trees. However we will show that this step is not needed. 
+
+For e.g. let the partition functions for each of the states be.
+\[
+Z_A = \sum_{X_1,X_2,\dotsc,X_n}\left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\]
+and 
+\[
+Z_B = \sum_{X_1,X_2,\dotsc,X_n}\left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^B_i})\psi(\mathbf{O^B_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\]
+\\
+If instead of the regular energy function 
+\[
+E_A(X) = -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\]
+we normalized the energy function with $Z_A$
+\[
+\begin{split}
+E_A'(X) &= -\log  \frac{1}{Z_A} \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]\\
+ &= -\log   \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right] + \log Z_A \\
+	&= E_A(X) + \log Z_A
+\end{split}
+\]
+\\
+Then optimizing the multistate Energy function would amount to : 
+\[
+\begin{split}
+X^{\dagger} &= \arg \min_X \left( \theta_A E_A'(X)  + \theta_B E_B'(X) \right) \\
+ &= \arg \min_X \left( \theta_A E_A(X) + \theta_B E_B(X) + \theta_A \log Z_A + \theta_B \log Z_B \right) \\
+ &= \arg \min_X \left( \theta_A E_A(X) + \theta_B E_B(X) \right) \\
+  &= X^*
+\end{split}
+\]
+
+This shows that normalizing the energy function values by $Z_A$ and $Z_B$ is not necessary in order to find point on the pareto optimal frontier. This is further demonstrated in Figure~\ref{fig:cvxfront2}.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/convexfront2.pdf}
+    \caption{This figure illustrates the issue with normalizing. When dealing with negative log likelihood values, it is possible that pareto frontier may not lie in the positive quadrant. This however does not imply that the method fails. Normalizing with the partition function merely corresponds to translating the points in the energy space. This transformation keeps the optimal solution invariant.  }
+    \label{fig:cvxfront2}
+\end{figure}
+\pagebreak
 
 
 

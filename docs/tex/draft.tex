@@ -154,14 +154,23 @@ X^\star_{i} &= Ptr(X^\star_{i+1},i+1) & \quad \text{if $1\leq i \leq n-1 $}
 Here, $V(i,k)$ corresponds to the maximum functional value attainable by examining the sequence from $X_{1:i}$ and the observations from $\mathbf{O_{1:i}}$. Also, $X^\star_{1:n}$ corresponds to the optimal sequence assignment. Pointers are stored to each of the previous variables during the calculation of $V(i,k)$. These pointers are used to retrieve the optimal sequence assignment. 
 
 \subsection{Multistate protein design}
-The problem of protein structure prediction is finding the lowest energy structure given a particular sequence. Protein design is known as the inverse protein structure prediction problem and involves finding the lowest energy sequence for a given structure. Multistate protein design generalizes protein design by asking to find a sequence that is stable for multiple structures. This is often posed as a  multi-objective optimization problem \ref{}.
+The problem of protein structure prediction is finding the lowest energy structure given a particular sequence. Protein design is known as the inverse protein structure prediction problem and involves finding the lowest energy sequence for a given structure. Multistate protein design generalizes protein design by asking to find a sequence that is stable for multiple structures. This is often posed as a  multi-objective optimization problem~\cite{Zheng2009}.
 
 \paragraph*{} Suppose, $E_A(X)$ and $E_B(X)$ are the energies of a sequence in state A and state B respectively. Then one way of doing multistate design would be to find $X^* = \arg \min_{X} E_A(X) + E_B(X)$. This would be the sequence that is likely to be stable under both state A and state B. Building on this idea, we might prefer to find a sequence $X^*$ that is more stable in one form than the other. We can thus solve for $X^* = \arg \min_{X} \theta_AE_A(X) + \theta_BE_B(X)$ where $\theta_A+\theta_B=1$ and $\theta_A,\theta_B \geq 0$. This sequence might be different from the solution to the previous optimization problem. By trying different combinations of $\theta_A$ and $\theta_B$ it is possible to find a number of different low energy sequences. However, it is not possible to try all possible values of $\theta$, nor is it possible to know which ones to pick to get a variety of different sequences.
 
 \paragraph*{} We will present an algorithm for finding optimal sequences for all combinations of $\theta_A$ and $\theta_B$. This is known as the pareto optimal frontier of the sequence space. See Figure~\ref{fig:cvxfront} for an illustration of the pareto-optimal frontier. This frontier is pareto-optimal in the sense that it is not possible to unilaterally improve the energy function value of one state without adversely affecting the energy value of the other state. Thus each sequence on the frontier is optimal for certain sets of $\theta_A$ and $\theta_B$. 
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/convexfront.pdf}
+    \caption{This figure illustrates the concept of a pareto-optimal convex frontier. The red curve is defined as the pareto-frontier and represents the tradeoff between $E_A(X)$ and $E_B(X)$. P1 and P2 are two points on the pareto frontier. P1 is better in terms of Energy A and P2 is better in terms of Energy B but not vice versa, thus showing a trade-off. The region D2(blue rectangle) is strictly dominated by P2, the region D1(green rectangle) is dominated by P1 and the region D12(yellow) is dominated by both P1 and P2. Domination means that points in these regions are clearly worse in both Energy A and Energy B. Also, notice the perpendicular drawn from the green dashed line and blue dashed line meets the pareto-frontier at P1 and P2 respectively.}
+    \label{fig:cvxfront}
+\end{figure}
+
+\pagebreak
+
 \subsubsection*{Quick hull procedure}
-The Quick hull procedure is used to find all the points on the pareto optimal frontier. The quick hull is traditionally used to find the convex hull of a set of points. In our case we are only interested in the lower left convex frontier. The algorithm in pseudo code is described in Algorithm~\ref{algo:quickhull1}.
+The Quick hull procedure is used to find all the points on the pareto optimal frontier. The quick hull is traditionally used to find the convex hull of a set of points. In our case we are only interested in the lower left convex frontier similar to ~\cite{Zheng2009}.  The algorithm in pseudo code is described in Algorithm~\ref{algo:quickhull1}. The basic idea behind the algorithm is to find a pair of points on the pareto optimal frontier. Find the point farthest from the line joining the two points and then to repeat the procedure with this newly found point and the previous two points. When there are no newer points to find, all points on the pareto optimal frontier have been discovered. 
 
 \begin{algorithm}
 \caption{Quick Hull} \label{algo:quickhull1}
@@ -187,21 +196,32 @@ The Quick hull procedure is used to find all the points on the pareto optimal fr
 \end{algorithm}
 
 
+\subsection{Convex combinations of CMRFs}
+For multi-state protein design we can combine the energy functions as follows.
+\[
+E_{AB}(X) = \theta_A E_A(X) + \theta_B E_B(X) \quad \text{where} \quad \theta_A,\theta_B \geq 0 \text{ and } \theta_A + \theta_B =1
+\]
+Here $E_A(X)$ is any energy function mapping sequence to energy values for state A. The lower the energy the better the fit for sequence X to state A. $E_A(X)$ can also be written as a CMRF.
+\[
+E_A(X) = -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\]
+Note that $-\log$ is to formulate the problem as a minimization problem so that it agrees with the energy concept. However the optimal sequence remain the same. 
+\[
+\begin{split}
+X_A &= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]\\
+&= \arg \max_X \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\end{split}
+\]
+Taking the $-\log$ also offers benefits as it lets us combine convex combinations of CMRF energy functions and gives rise to new graphical models called Tree MRFS (TMRFs). These TMRFs are conceptually very similar to CMRFs and possess the properties of efficient inference and decoding. 
+
+\begin{align*}
+X_A &= \arg \min_X -\log  \left[{\prod_{i=1}^{n}{\phi(X_i)\phi(\mathbf{O^A_i})\psi(\mathbf{O^A_i},X_i})\prod_{i=1}^{n-1}{\psi(X_i,X_{i+1})}}\right]
+\end{align*}
+
+
+
 
 \begin{figure}[h!]
-    \centering
-    \includegraphics[width=0.9\textwidth]{pics/convexfront.pdf}
-    \caption{This figure illustrates the concept of a pareto-optimal convex frontier. The red curve is defined as the pareto-frontier and represents the tradeoff between $E_A(X)$ and $E_B(X)$. P1 and P2 are two points on the pareto frontier. P1 is better in terms of Energy A and P2 is better in terms of Energy B but not vice versa, thus showing a trade-off. The region D2(blue rectangle) is strictly dominated by P2, the region D1(green rectangle) is dominated by P1 and the region D12(yellow) is dominated by both P1 and P2. Domination means that points in these regions are clearly worse in both Energy A and Energy B. Also, notice the perpendicular drawn from the green dashed line and blue dashed line meets the pareto-frontier at P1 and P2 respectively.}
-    \label{fig:cvxfront}
-\end{figure}
-
-\pagebreak
-
-\subsection{Convex combinations of CMRFs}
-For multi-state protein design we combine the energy functions as follows. This has the interesting propertu
-
-
-\begin{figure}[h]
 % selecting unit length
 \centering
 % used for centering Figure
@@ -299,6 +319,21 @@ This shows that normalizing the energy function values by $Z_A$ and $Z_B$ is not
 \pagebreak
 
 
+\subsubsection{Clarification on Energy Convex Combination}
+From the discussion in the beginning, the reader may have been lead to believe that we are taking convex combinations of the likelihood of multiple states and then maximizing this likelihood. While in spirit this is true, however practically we are optimizing something else. Let $L(X|O^A)$  and $L(X|O^B)$ be the likelihoods of the sequences under state A and state B respectively. The reader may have been lead to believe that we are solving the following problem
+\begin{equation}
+\label{eqn:clarif1}
+X^* = \arg \max_X \left( \theta_A L(X|O^A) + \theta_B L(X|O^B) \right)
+\end{equation}
+But in, reality we are solving : 
+\begin{align}
+X^* &= \arg \min_X \left( -\theta_A \log L(X|O^A) - \theta_B \log L(X|O^B) \right) \\
+&= \arg \min_X \left( \log \frac{1}{L(X|O^A)^{\theta_A} L(X|O^B)^{\theta_B}} \right) \\
+&= \arg \max_X \left( L(X|O^A)^{\theta_A} L(X|O^B)^{\theta_B} \right)
+\label{eqn:clarif2} 
+\end{align}
+
+Clearly Eqn~\ref{eqn:clarif2} is not the same as Eqn~\ref{eqn:clarif1}. One is minimizing the arithmetic mean, while the other is minimizing the geometric mean. It remains to be seen what the semantic consequence of this mathematical detail is. 
 
 \section{Conclusion}
 Write your conclusion here.

@@ -5,6 +5,10 @@
 \usepackage{color}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -423,8 +427,91 @@ In the previous section we showed how to find $X_{AB} = \argmin_X \left( \theta_
 \end{algorithmic}
 \end{algorithm}
 
-
 \pagebreak
+
+
+\subsection{Parameter Learning/Training}
+So far, we have assumed that the $\phi,\psi$ parameters were available to us. In this section we will describe how these weights are learned. How we can use these weights to for defining the joint TMRF. 
+
+
+\subsubsection{Training an HMM}
+
+
+\subsubsection{Converting a HMM to CMRF}
+It is possible to reparameterize an HMM so that it now becomes a CMRF. The partition function $Z$ of the newly constructed CMRF equals 1 corresponding to a probability distribution., However there is 
+
+\subsection{Combining the CMRF to a HMM}
+
+
+
+
+\section{Experiments}
+In this section we evaluate the performance of our algorithm on simulated as well as experimental data. 
+
+\subsection{Simulation Experiments}
+We demonstrate how our algorithm performs on simulated data. The data was prepared by considering a protein of length 15. The sequence space was limited to an alphabet consisting of two arbitrary characters $\alpha,\beta$. The observation belong to a discrete space Helix, Beta and Loop which represented by H,B and L. The weights of the CMRF have weights $\phi,\psi$ as defined in Tables~\ref{tab:psi1} and~\ref{tab:psi2}. We define two states State A and State B that corresponding to competing objectives for multistate design. State A is a Helix-Loop-Helix strand whereas State B is Sheet-Loop-Sheet strand. Figure~\ref{fig:simstates} shows a cartoon diagrams for our design problem. State A and State B have \texttt{HHHHLLLHHHH} and \texttt{BBBBLLLBBBB} secondary structure features respectively. These are the observations for the CMRF.
+\\
+\\
+Using the weight matrices we defined in Tables~\ref{tab:ps1} and~\ref{tab:psi2} we run CMRF-Decode to get $X_A$ which satisfies $X_A = \argmin_X E_A(X)$. We obtain $X_B$ similarly. Not surprisingly $X_A$ is $\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha$ 
+and $X_B$ is $\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta$. This is because the weights in the table are biased towards $\alpha$ emitting \texttt{H} and $\beta$ emitting \texttt{B}. Thus according to our model $X_A$ is the sequence that is most stable under state A, whereas $X_B$ is the sequence is most stable under state B.
+\\
+\\
+We then run the \texttt{Pareto-Frontier} algorithm using the same weights and observations for state A and state B to enumerate the entire pareto frontier. We number the points to show the path taken by the pareto frontier algorithm. We also calculate the energies of all the $2^15$ sequences possible under this restricted sequence model and plot the points. The \texttt{Pareto-Frontier} algorithm was able to find the pareto frontier in \textcolor{red}{N steps} steps. See Figure~\ref{fig:pareto-sim} for the trace taken by the algorithm.  We also compare the running times as opposed to brute force and MCMC and compare the running times. 
+
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{cc|c|c|c|}
+\cline{3-5}
+& & \multicolumn{3}{c|}{Observations($\mathbf{O_i}$)} \\ \cline{3-5}
+& & Helix(H) & Beta(B) & Loop(L) \\ \cline{1-5}
+\multicolumn{1}{|c|}{\multirow{2}{*}{Sequence($X_i$)}} &
+\multicolumn{1}{|c|}{$\alpha$} & 0.6 & 0.2 & 0.2      \\ \cline{2-5}
+\multicolumn{1}{|c|}{}                        &
+\multicolumn{1}{|c|}{$\beta$} & 0.2 & 0.6 & 0.2      \\ \cline{1-5}
+\end{tabular}
+\end{center}
+\caption{$\psi(X,\mathbf{O})$ contains the weights for edge potentials of sequence and features together }
+\label{tab:psi1}
+\end{table}
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{cc|c|c|}
+\cline{3-4}
+& & \multicolumn{2}{c|}{Sequence($X_{i+1}$)} \\ \cline{3-4}
+& & $\alpha$ & $\beta$  \\ \cline{1-4}
+\multicolumn{1}{|c|}{\multirow{2}{*}{Sequence($X_i$)}} &
+\multicolumn{1}{|c|}{$\alpha$} & 0.7 & 0.3      \\ \cline{2-4}
+\multicolumn{1}{|c|}{}                        &
+\multicolumn{1}{|c|}{$\beta$} & 0.3 & 0.7      \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\caption{$\psi(X_i,X_{i+1})$ contains the weights for the edge potentials of adjacent amino acids}
+\label{tab:psi2}
+\end{table}
+
+
+
+\begin{table}
+\begin{center}
+\begin{tabular}{cc|c|c|}
+\cline{3-4}
+& & \multicolumn{2}{c|}{Sequence($X_{i+1}$)} \\ \cline{3-4}
+& & $\alpha$ & $\beta$  \\ \cline{1-4}
+\multicolumn{1}{|c|}{\multirow{2}{*}{Sequence($X_i$)}} &
+\multicolumn{1}{|c|}{$\alpha$} & 0.7 & 0.3      \\ \cline{2-4}
+\multicolumn{1}{|c|}{}                        &
+\multicolumn{1}{|c|}{$\beta$} & 0.3 & 0.7      \\ \cline{1-4}
+\end{tabular}
+\end{center}
+\caption{Time and steps taken on simulated data}
+\end{table}
+
+\section{Discussion}
+
 
 \subsubsection{Normalizing CMRFs}
 So far we have been assuming that the $E_A(X)$ and $E_B(X)$ lies in the positive quadrant. However this assumption need not not be true under our CMRF model. This is because it is possible that $f(X) > 1$ and conversely $-\log f(X) < 0$. This can lead to the energy function values being negative as shown in Figure~\ref{fig:cvxfront2}. We can potentially fix this be normalizing energy the Likelihood function with the partition function Z. The partitions can be efficiently calculated using the sum-product algorithm for trees. However we will show that this step is not needed. 

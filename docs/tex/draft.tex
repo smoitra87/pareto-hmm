@@ -449,16 +449,14 @@ It is possible to reparameterize an HMM so that it now becomes a CMRF. The parti
 In this section we evaluate the performance of our algorithm on simulated as well as experimental data. 
 
 \subsection{Simulation Experiments}
-We demonstrate how our algorithm performs on simulated data. The data was prepared by considering a protein of length 15. The sequence space was limited to an alphabet consisting of two arbitrary characters $\alpha,\beta$. The observation belong to a discrete space Helix, Beta and Loop which represented by H,B and L. The weights of the CMRF have weights $\phi,\psi$ as defined in Tables~\ref{tab:psi1} and~\ref{tab:psi2}. We define two states State A and State B that corresponding to competing objectives for multistate design. State A is a Helix-Loop-Helix strand whereas State B is Sheet-Loop-Sheet strand. Figure~\ref{fig:simstates} shows a cartoon diagrams for our design problem. State A and State B have \texttt{HHHHLLLHHHH} and \texttt{BBBBLLLBBBB} secondary structure features respectively. These are the observations for the CMRF.
+We demonstrate how our algorithm performs on simulated data. The data was prepared by considering a protein of length 12. The sequence space was limited to an alphabet consisting of two arbitrary characters $\alpha,\beta$. The observation belong to a discrete space Helix, Beta and Loop which represented by H,B and L. The weights of the CMRF have weights $\phi,\psi$ as defined in Tables~\ref{tab:psi1} and~\ref{tab:psi2}. We define two states State A and State B that corresponding to competing objectives for multistate design. State A is a Helix-Loop-Helix strand whereas State B is Sheet-Loop-Sheet strand. Figure~\ref{fig:simstates} shows a cartoon diagrams for our design problem. State A and State B have \texttt{HHHHLLLLHHHH} and \texttt{BBBBLLLLBBBB} secondary structure features respectively. These are the observations for the CMRF.
 \\
 \\
-Using the weight matrices we defined in Tables~\ref{tab:ps1} and~\ref{tab:psi2} we run CMRF-Decode to get $X_A$ which satisfies $X_A = \argmin_X E_A(X)$. We obtain $X_B$ similarly. Not surprisingly $X_A$ is $\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha$ 
-and $X_B$ is $\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta$. This is because the weights in the table are biased towards $\alpha$ emitting \texttt{H} and $\beta$ emitting \texttt{B}. Thus according to our model $X_A$ is the sequence that is most stable under state A, whereas $X_B$ is the sequence is most stable under state B.
+Using the weight matrices we defined in Tables~\ref{tab:psi1} and~\ref{tab:psi2} we run CMRF-Decode to get $X_A$ which satisfies $X_A = \argmin_X E_A(X)$. We obtain $X_B$ similarly. Not surprisingly $X_A$ is $\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha\alpha$ 
+and $X_B$ is $\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta\beta$. This is because the weights in the table are biased towards $\alpha$ emitting \texttt{H} and $\beta$ emitting \texttt{B}. Thus according to our model $X_A$ is the sequence that is most stable under state A, whereas $X_B$ is the sequence is most stable under state B.
 \\
 \\
-We then run the \texttt{Pareto-Frontier} algorithm using the same weights and observations for state A and state B to enumerate the entire pareto frontier. We number the points to show the path taken by the pareto frontier algorithm. We also calculate the energies of all the $2^15$ sequences possible under this restricted sequence model and plot the points. The \texttt{Pareto-Frontier} algorithm was able to find the pareto frontier in \textcolor{red}{N steps} steps. See Figure~\ref{fig:pareto-sim} for the trace taken by the algorithm.  We also compare the running times as opposed to brute force and MCMC and compare the running times. 
-
-
+We then run the \texttt{Pareto-Frontier} algorithm using the same weights and observations for state A and state B to enumerate the entire pareto frontier. This pareto frontier contains all the best sequences that any convex combination of $E_A(X)$ and $E_B(X)$ would give rise to. We number the points to show the path taken by the pareto frontier algorithm. We also calculate the energies of all the $2^{12}$ sequences possible under this restricted sequence model and plot the points. The \texttt{Pareto-Frontier} algorithm was able to find the pareto frontier in \textcolor{red}{N steps} steps. See Figure~\ref{fig:pareto-sim} for the trace taken by the algorithm.  We also compare the running times as opposed to brute force and MCMC and compare the running times. 
 
 \begin{table}
 \begin{center}
@@ -509,6 +507,16 @@ We then run the \texttt{Pareto-Frontier} algorithm using the same weights and ob
 \end{center}
 \caption{Time and steps taken on simulated data}
 \end{table}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/convexfront2.pdf}
+    \caption{ }
+    \label{fig:pareto-sim}
+\end{figure}
+\pagebreak
+
+\subsection{Experiments on Biological Data}
 
 \section{Discussion}
 

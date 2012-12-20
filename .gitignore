@@ -1,5 +1,6 @@
 *.pyx
 *~
+*.swp
 docs/tex/*
 !docs/tex/*.tex
 !docs/tex/*.bib

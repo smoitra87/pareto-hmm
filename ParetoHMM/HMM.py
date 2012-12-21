@@ -17,7 +17,7 @@ class HMM(object) :
 		""" Initialized using the train method """
 		self.trained = False
 		self.length = None
-		self.emit = None # Emission probs
+		self.emit = None # Emission probs (seq,feat)
 		self.trans = None # Transition probs
 		self.dims = None # (latent,emit) dimspace
 		self.featmap = None # Maps features to ids
@@ -51,7 +51,29 @@ class HMM(object) :
 
 	def decode(self,obs)  : 
 		""" Perform max decoding to get the optimal sequence """
-		pass
+		# convert feature to ids
+		fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+		V = []
+		Ptr = []
+		# For the first element
+		V.append(map(lambda(k):np.log(self.emit[0][k][fids[0]])\
+			+np.log(self.initprob[k]),range(self.dims[0][0])))
+
+		# For the rest of the elements
+		for i in range(1,hmm.length) :
+			ptr_k = []; V_k = [];
+			for k in range(self.dims[i][0]) :
+				X = map(lambda(j):np.log(self.trans[i-1][j][k])+V[i-1][j],\
+					range(self.dims[i-1][0]))
+				maxX = max(X)
+				ptr_k.append(X.index(maxX))
+				V_k.append(np.log(self.emit[i][k][fids[i]])+maxX)
+			Ptr.append(Ptr)
+			V.append(V_k)
+
+		1/0
+
+
 
 	def sample(self) :
 		""" Sample from the HMM"""
@@ -142,6 +164,13 @@ if __name__ == '__main__' :
 		score = hmm.score(seq,feat)
 		print('Score for seq:{0} with feat:{1} is {2}'.\
 			format(seq,feat,score))
+
+
+	print("*"*10+"Decoding HMM"+"*"*10)
+	hmm.decode(feat1)	
+
+
+
 
 
 

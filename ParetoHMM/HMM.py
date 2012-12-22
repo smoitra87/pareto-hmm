@@ -71,8 +71,11 @@ class HMM(object) :
 			Ptr.append(Ptr)
 			V.append(V_k)
 
-		1/0
+		# retreive the optimal sequence
+		seq_max = []
+		seq_max.append(V[-1].index(max(V[-1])))
 
+		1/0
 
 
 	def sample(self) :
@@ -154,6 +157,9 @@ if __name__ == '__main__' :
 	cmrf = CMRF(hmm)
 	seq1 = 'a'*12
 	feat1 = 'HHHHLLLLHHHH'
+	seq2 = 'b'*12
+	feat2 = 'BBBBLLLLBBBB'
+
 	score1 = hmm.score(seq1,feat1)
 	print('Score for seq:{0} with feat:{1} is {2}'.format(seq1,feat1,score1))
 

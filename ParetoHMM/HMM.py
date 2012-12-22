@@ -43,7 +43,7 @@ class HMM(object) :
 		
 		# sum up score of latent variables
 		ll += np.log(self.initprob[sids[0]])
-		for i in xrange(i,self.length-1) : 
+		for i in xrange(self.length-1) : 
 			ll+= np.log(self.trans[i][sids[i]][sids[i+1]])
 
 		return ll
@@ -68,15 +68,22 @@ class HMM(object) :
 				maxX = max(X)
 				ptr_k.append(X.index(maxX))
 				V_k.append(np.log(self.emit[i][k][fids[i]])+maxX)
-			Ptr.append(Ptr)
+			Ptr.append(ptr_k)
 			V.append(V_k)
 
 		# retreive the optimal sequence
 		seq_max = []
 		seq_max.append(V[-1].index(max(V[-1])))
-
-		1/0
-
+		energy_max = V[-1][seq_max[-1]]
+		for ptr_k in reversed(Ptr) :
+			seq_max.append(ptr_k[seq_max[-1]])
+		seq_max.reverse()
+		
+		# map it back to the original sequence
+		decode_seq = "".join([self.seqmap2[i][seqid] \
+			for i,seqid in enumerate(seq_max)])
+	
+		return energy_max,decode_seq
 
 	def sample(self) :
 		""" Sample from the HMM"""
@@ -140,6 +147,7 @@ def set_params_hmm_exp1(hmm) :
 		[[0.7,0.3],[0.3,0.7]]
 	]*hmm.length
 	hmm.seqmap = [{'a':0,'b':1}]*hmm.length
+	hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
 	hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
 	hmm.initprob = [0.5,0.5]
 	hmm.trained = True
@@ -173,8 +181,11 @@ if __name__ == '__main__' :
 
 
 	print("*"*10+"Decoding HMM"+"*"*10)
-	hmm.decode(feat1)	
-
+	score,seq = hmm.decode(feat1)	
+	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat1))
+	feat3 = "HHHHLLLLBBBB"
+	score,seq = hmm.decode(feat3)	
+	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat3))
 
 
 

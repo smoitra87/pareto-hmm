@@ -615,7 +615,21 @@ This can be done as
 
 \paragraph{Implementation Scheme 3} : Different node and edge factors for the different amoino acids. This means that the factors are not tied together. 
 
-\paragraph{Decode All seq} : It may be possible to find all the sequences that give the same energy rather than just return only one of them. this can be done by storing a list of pointers during the DP decoding.
+\paragraph{Decode All seq} : It may be possible to find all the sequences that give the same energy rather than just return only one of them. this can be done by storing a list of pointers during the DP 
+decoding.
+
+
+\subsection{Theory Notes}
+
+\paragraph{Failure Cases} : Here we list some of the failure cases : 
+\begin{itemize}
+\item Can you prove that the number of points on the convex frontier are not exponential ?
+\item This algorithm is slow when the points on the frontier resemble the circumeference of a circle
+\end{itemize}
+
+\paragraph{More than 2 states } : how does the convex hull algo work for more than 2 states ? How do you calculate the slope of a 3 dimensional polytope ?
+
+\paragraph{convex combinations?} : Does $\theta_A$ and $\theta_B$ need to sum to one?
 
 \subsection{Experiment Design Notes}
 

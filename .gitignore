@@ -1,4 +1,5 @@
 *.pyx
+*.pyc
 *~
 *.swp
 docs/tex/*

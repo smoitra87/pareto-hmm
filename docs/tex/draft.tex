@@ -583,10 +583,45 @@ X^* &= \arg \min_X \left( -\theta_A \log L(X|O^A) - \theta_B \log L(X|O^B) \righ
 
 Clearly Eqn~\ref{eqn:clarif2} is not the same as Eqn~\ref{eqn:clarif1}. One is minimizing the arithmetic mean, while the other is minimizing the geometric mean. It remains to be seen what the semantic consequence of this mathematical detail is. 
 
+
+
 \section{Conclusion}
 We presented a method that is able to perform fast decoding and inference for finding minimum energy sequences for the purpose of protein design. We also show to find the pareto-frontier for the sequence space. The key idea behind this method is the use of Tree MRFs which allow fast Dynamic Programming for max-decoding.
 
+
 \bibliographystyle{plain}
 \bibliography{refs}
+
+\appendix
+
+\section{Other Notes}
+
+\subsection{Implementation Notes}
+
+\paragraph{Implementation Scheme 1} : Right now there is a single $\phi,\psi$ parameter set. This means that you use a single alignment for learning the parameters of the HMM. Once the parameter have been learned the energy functions are defined by conditioning on the features of the state you are interested in. The parameters of the different amino acids are tied together. This need not be always be the case. 
+
+Instead of having different nodes for all the the different TMRFs. The energy functions can be so modified such that they correspond to a single CMRF. then decoding and sampling from this CMRF is the same as before. 
+
+This can be done as 
+\begin{align*}
+\phi^{TMRF}(X) &= 1 \\
+\phi^{TMRF}(\mathbf{O_i}) &= 1 \\
+\psi^{TMRF}(X_i,X_{i+1}) &= \psi(X_i,X_j)\\
+\psi^{TMRF}(X_i,\mathbf{O_i^{AB}}) &= \psi(X_i,\mathbf{O_i^A})^{\theta_A}\psi(X_i,\mathbf{O_i^B})^{\theta_B}
+\end{align*}
+
+
+\paragraph{Implementation Scheme 2} : Different alignments that represent different amino acid factors for the protein class under consideration. This gives rise to different $\phi,\psi$ features. How does this change inference and decoding ?
+
+\paragraph{Implementation Scheme 3} : Different node and edge factors for the different amoino acids. This means that the factors are not tied together. 
+
+\paragraph{Decode All seq} : It may be possible to find all the sequences that give the same energy rather than just return only one of them. this can be done by storing a list of pointers during the DP decoding.
+
+\subsection{Experiment Design Notes}
+
+\paragraph{Benchmarking} : It is important to compare the performance of our algorithm with some other well known protein design algorithms. This is important from the purpose of getting a paper accepted. The more evidence you can provide the more convincing a paper is. 
+
+
+
 
 \end{document}

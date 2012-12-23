@@ -130,7 +130,6 @@ class CMRF(object) :
 			ll += np.log(self.emitpsi[i][sids[i]][fids[i]])
 		
 		# sum up score of latent variables
-		ll += np.log(0.5)
 		for i in xrange(self.length-1) : 
 			ll+= np.log(self.seqpsi[i][sids[i]][sids[i+1]])
 
@@ -149,7 +148,7 @@ class CMRF(object) :
 		Ptr = []
 		# For the first element
 		V.append(map(lambda(k):np.log(self.emitpsi[0][k][fids[0]])\
-			+np.log(self.seqphi[k]),range(self.dims[0][0])))
+			+np.log(self.seqphi[0][k]),range(self.dims[0][0])))
 
 		# For the rest of the elements
 		for i in range(1,hmm.length) :
@@ -159,7 +158,8 @@ class CMRF(object) :
 					range(self.dims[i-1][0]))
 				maxX = max(X)
 				ptr_k.append(X.index(maxX))
-				V_k.append(np.log(self.emitpsi[i][k][fids[i]])+maxX)
+				V_k.append(np.log(self.seqphi[i][k])+\
+					np.log(self.emitpsi[i][k][fids[i]])+maxX)
 			Ptr.append(ptr_k)
 			V.append(V_k)
 
@@ -186,36 +186,42 @@ class CMRF(object) :
 
 class TMRF(object) : 
 	""" The Tree MRF which can be used for decoding """
-	def __init__(self,*cmrflist) : 
+	def __init__(self,cmrf,thetalist,featlist) : 
 		""" Converts A list of cmrfs to a joint TMRF """
-		self.trained = hmm.trained
-		self.length = hmm.length
-		self.emitpsi = hmm.emit # Emission probs (seq,feat)
-		self.seqpsi = hmm.trans # Transition probs
-		self.dims = hmm.dims # (latent,emit) dimspace
-		self.featmap = hmm.featmap # Maps features to ids
-		self.seqmap = hmm.seqmap # Maps aa types to ids
-		self.seqphi = [np.ones(dim[0]) for dim in hmm.dims]
-		self.featphi =[np.ones(dim[1]) for dim in hmm.dims] 
+		self.nStates = len(thetalist)
+		assert(self.nStates>1)
+		assert(len(thetalist)==len(featlist))
+		self.thetalist = thetalist
+		self.featlist = featlist
+		self.length = cmrf.length
+		self.dims = cmrf.dims # (latent,emit) dimspace
+		self.featmap = cmrf.featmap # Maps features to ids
+		self.seqmap = cmrf.seqmap # Maps aa types to ids
+		self.seqpsi = cmrf.seqpsi
+		self.seqphi = cmrf.seqphi
+		self.featphi = cmrf.featphi
+		self.emitpsi = cmrf.emitpsi
 
 		# maps from id to seq
 		self.seqmap2 = map(reverse_dict,self.seqmap)
 		self.featmap2 = map(reverse_dict,self.featmap)
 
-	def score(self,seq,obs) : 
+	def score_seq(self,seq) : 
 		""" Score a given sequence and observation"""
 		# Convert seq to ids
 		sids = [seqmap[aa] for seqmap,aa in zip(self.seqmap,seq)]	
 		# convert feature to ids
-		fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
-
+		fid_list  = []
+		for obs in self.featlist : 
+			fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+			fid_list.append(fids)
 		ll = 0.0
 		# sum up scores of emission variables
 		for i in xrange(self.length) : 
-			ll += np.log(self.emitpsi[i][sids[i]][fids[i]])
-		
-		# sum up score of latent variables
-		ll += np.log(0.5)
+			for j in xrange(self.nStates) :
+				fids,theta = fid_list[j],self.thetalist[j]
+				ll += theta*np.log(self.emitpsi[i][sids[i]][fids[i]])	
+			
 		for i in xrange(self.length-1) : 
 			ll+= np.log(self.seqpsi[i][sids[i]][sids[i+1]])
 
@@ -224,27 +230,39 @@ class TMRF(object) :
 			ll+=  np.log(self.seqphi[i][sids[i]])
 			ll+= np.log(self.featphi[i][fids[i]])
 		return ll
+		
 
-
-	def decode(self,obs)  : 
+	def decode(self)  : 
 		""" Perform max decoding to get the optimal sequence """
 		# convert feature to ids
-		fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+		fid_list  = []
+		for obs in self.featlist : 
+			fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+			fid_list.append(fids)
+		
 		V = []
 		Ptr = []
 		# For the first element
-		V.append(map(lambda(k):np.log(self.emitpsi[0][k][fids[0]])\
-			+np.log(self.seqphi[k]),range(self.dims[0][0])))
+		v_k = []
+		for k in xrange(self.dims[0][0]) :
+			X = np.log(self.seqphi[0][k]);
+			for j in xrange(self.nStates) :
+				fids,theta = fid_list[j],self.thetalist[j]
+				X += theta*np.log(self.emitpsi[0][k][fids[0]])
+			v_k.append(X)
+		V.append(v_k)
 
 		# For the rest of the elements
 		for i in range(1,hmm.length) :
 			ptr_k = []; V_k = [];
 			for k in range(self.dims[i][0]) :
-				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])+V[i-1][j],\
-					range(self.dims[i-1][0]))
+				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])\
+					+V[i-1][j],range(self.dims[i-1][0]))
 				maxX = max(X)
 				ptr_k.append(X.index(maxX))
-				V_k.append(np.log(self.emitpsi[i][k][fids[i]])+maxX)
+				Y = sum([theta*np.log(self.emitpsi[i][k][fids[i]]) \
+					for theta,fids in zip(self.thetalist,fid_list)])
+				V_k.append(Y+maxX)
 			Ptr.append(ptr_k)
 			V.append(V_k)
 
@@ -320,6 +338,9 @@ if __name__ == '__main__' :
 	feat1 = 'HHHHLLLLHHHH'
 	seq2 = 'b'*12
 	feat2 = 'BBBBLLLLBBBB'
+	seq3 = 'a'*6+'b'*6
+	feat3 = 'HHHHLLLLBBBB'
+
 
 	score1 = hmm.score(seq1,feat1)
 	print('Score for seq:{0} with feat:{1} is {2}'.format(seq1,feat1,score1))
@@ -336,7 +357,6 @@ if __name__ == '__main__' :
 	print("*"*10+"Decoding HMM"+"*"*10)
 	score,seq = hmm.decode(feat1)	
 	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat1))
-	feat3 = "HHHHLLLLBBBB"
 	score,seq = hmm.decode(feat3)	
 	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat3))
 
@@ -345,18 +365,62 @@ if __name__ == '__main__' :
 	cmrf = CMRF(hmm)	
 	print("CMRF seq:{} feat:{} score:{}".\
 		format(seq1,feat1,cmrf.score(seq1,feat1)))
+	print("CMRF seq:{} feat:{} score:{}".\
+		format(seq2,feat2,cmrf.score(seq2,feat2)))
+	print("CMRF seq:{} feat:{} score:{}".\
+		format(seq3,feat3,cmrf.score(seq3,feat3)))
+	print("CMRF seq:{} feat:{} score:{}".\
+		format(seq2,feat1,cmrf.score(seq2,feat1)))
+	print("CMRF seq:{} feat:{} score:{}".\
+		format(seq3,feat1,cmrf.score(seq3,feat1)))
 
 	print("*"*10+"Decoding CMRF"+"*"*10)
-	score,seq = hmm.decode(feat1)	
+	score,seq = cmrf.decode(feat1)	
 	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat1))
-	feat3 = "HHHHLLLLBBBB"
-	score,seq = hmm.decode(feat3)	
+	score,seq = cmrf.decode(feat3)	
 	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat3))
 
+	print('*'*10+"Working with TMRF"+"*"*10)
+	tmrf = TMRF(cmrf,[0.0,1.0],[feat1,feat2])	
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq1,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq1)))
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq2,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq2)))
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq3,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq3)))
+	tmrf = TMRF(cmrf,[1.0,0.0],[feat1,feat2])	
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq1,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq1)))
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq2,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq2)))
+	print("TMRF seq:{} feat1:{} feat2:{} theta:{} score:{}".\
+		format(seq3,feat1,feat2,tmrf.thetalist,tmrf.score_seq(seq3)))
 
-
-
-
-
+	print("*"*10+"Decoding TMRF"+"*"*10)
+	theta = [1.0,0.0]
+	tmrf = TMRF(cmrf,theta,[feat1,feat2])	
+	score,seq = tmrf.decode()	
+	print("Decoded seq:{} energy:{} feat1:{} feat2:{} theta:{}".\
+		format(seq,score,feat1,feat2,theta))
+	theta = [0.0,1.0]
+	tmrf = TMRF(cmrf,theta,[feat1,feat2])	
+	score,seq = tmrf.decode()	
+	print("Decoded seq:{} energy:{} feat1:{} feat2:{} theta:{}".\
+		format(seq,score,feat1,feat2,theta))
+	theta = [0.5,0.5]
+	tmrf = TMRF(cmrf,theta,[feat1,feat2])	
+	score,seq = tmrf.decode()	
+	print("Decoded seq:{} energy:{} feat1:{} feat2:{} theta:{}".\
+		format(seq,score,feat1,feat2,theta))
+	theta = [0.4,0.6]
+	tmrf = TMRF(cmrf,theta,[feat1,feat2])	
+	score,seq = tmrf.decode()	
+	print("Decoded seq:{} energy:{} feat1:{} feat2:{} theta:{}".\
+		format(seq,score,feat1,feat2,theta))
+	theta = [0.6,0.4]
+	tmrf = TMRF(cmrf,theta,[feat1,feat2])	
+	score,seq = tmrf.decode()	
+	print("Decoded seq:{} energy:{} feat1:{} feat2:{} theta:{}".\
+		format(seq,score,feat1,feat2,theta))
 
 

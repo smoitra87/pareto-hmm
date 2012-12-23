@@ -93,11 +93,17 @@ class HMM(object) :
 		pass
 
 
-class CMRF(HMM) : 
+class CMRF(object) : 
 	""" CMRF """
 	def __init__(self,hmm) : 
 		""" Converts hmm to CMRF """
-		pass
+		self.trained = hmm.trained
+		self.length = hmm.length
+		self.emit = hmm.emit # Emission probs (seq,feat)
+		self.trans = hmm.trans # Transition probs
+		self.dims = hmm.dims # (latent,emit) dimspace
+		self.featmap = hmm.featmap # Maps features to ids
+		self.seqmap = hmm.seqmap # Maps aa types to ids
 
 	def train(self,traindata) : 
 		""" Train the HMM and set the params of the model"""

@@ -11,6 +11,11 @@ import pylab as pl
 import numpy as np
 import random
 
+
+def reverse_dict(d)	:	
+	""" Reverses a dictionary making the keys be the values"""
+	return dict([(v,k) for k,v in d.viewitems()])	
+
 class HMM(object) : 
 	""" HMM """
 	def __init__(self) : 
@@ -23,7 +28,8 @@ class HMM(object) :
 		self.featmap = None # Maps features to ids
 		self.seqmap = None # Maps aa types to ids
 		self.initprob = None
-
+		self.seqmap2 = None
+		self.fratmap2 = None
 
 	def train(self,traindata) : 
 		""" Train the HMM and set the params of the model"""
@@ -63,7 +69,8 @@ class HMM(object) :
 		for i in range(1,hmm.length) :
 			ptr_k = []; V_k = [];
 			for k in range(self.dims[i][0]) :
-				X = map(lambda(j):np.log(self.trans[i-1][j][k])+V[i-1][j],\
+				X = map(lambda(j):\
+					np.log(self.trans[i-1][j][k])+V[i-1][j],\
 					range(self.dims[i-1][0]))
 				maxX = max(X)
 				ptr_k.append(X.index(maxX))
@@ -92,7 +99,6 @@ class HMM(object) :
 			return
 		pass
 
-
 class CMRF(object) : 
 	""" CMRF """
 	def __init__(self,hmm) : 
@@ -106,6 +112,10 @@ class CMRF(object) :
 		self.seqmap = hmm.seqmap # Maps aa types to ids
 		self.seqphi = [np.ones(dim[0]) for dim in hmm.dims]
 		self.featphi =[np.ones(dim[1]) for dim in hmm.dims] 
+
+		# maps from id to seq
+		self.seqmap2 = map(reverse_dict,self.seqmap)
+		self.featmap2 = map(reverse_dict,self.featmap)
 
 	def score(self,seq,obs) : 
 		""" Score a given sequence and observation"""
@@ -138,18 +148,18 @@ class CMRF(object) :
 		V = []
 		Ptr = []
 		# For the first element
-		V.append(map(lambda(k):np.log(self.emit[0][k][fids[0]])\
-			+np.log(self.initprob[k]),range(self.dims[0][0])))
+		V.append(map(lambda(k):np.log(self.emitpsi[0][k][fids[0]])\
+			+np.log(self.seqphi[k]),range(self.dims[0][0])))
 
 		# For the rest of the elements
 		for i in range(1,hmm.length) :
 			ptr_k = []; V_k = [];
 			for k in range(self.dims[i][0]) :
-				X = map(lambda(j):np.log(self.trans[i-1][j][k])+V[i-1][j],\
+				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])+V[i-1][j],\
 					range(self.dims[i-1][0]))
 				maxX = max(X)
 				ptr_k.append(X.index(maxX))
-				V_k.append(np.log(self.emit[i][k][fids[i]])+maxX)
+				V_k.append(np.log(self.emitpsi[i][k][fids[i]])+maxX)
 			Ptr.append(ptr_k)
 			V.append(V_k)
 
@@ -167,9 +177,90 @@ class CMRF(object) :
 	
 		return energy_max,decode_seq
 
+	def sample(self) :
+		""" Sample from the HMM"""
+		if not self.trained : 
+			sys.stderr.write("HMM not yet trained. Cannot Sample!")
+			return
+		pass
+
+class TMRF(object) : 
+	""" The Tree MRF which can be used for decoding """
+	def __init__(self,*cmrflist) : 
+		""" Converts A list of cmrfs to a joint TMRF """
+		self.trained = hmm.trained
+		self.length = hmm.length
+		self.emitpsi = hmm.emit # Emission probs (seq,feat)
+		self.seqpsi = hmm.trans # Transition probs
+		self.dims = hmm.dims # (latent,emit) dimspace
+		self.featmap = hmm.featmap # Maps features to ids
+		self.seqmap = hmm.seqmap # Maps aa types to ids
+		self.seqphi = [np.ones(dim[0]) for dim in hmm.dims]
+		self.featphi =[np.ones(dim[1]) for dim in hmm.dims] 
+
+		# maps from id to seq
+		self.seqmap2 = map(reverse_dict,self.seqmap)
+		self.featmap2 = map(reverse_dict,self.featmap)
+
+	def score(self,seq,obs) : 
+		""" Score a given sequence and observation"""
+		# Convert seq to ids
+		sids = [seqmap[aa] for seqmap,aa in zip(self.seqmap,seq)]	
+		# convert feature to ids
+		fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+
+		ll = 0.0
+		# sum up scores of emission variables
+		for i in xrange(self.length) : 
+			ll += np.log(self.emitpsi[i][sids[i]][fids[i]])
+		
+		# sum up score of latent variables
+		ll += np.log(0.5)
+		for i in xrange(self.length-1) : 
+			ll+= np.log(self.seqpsi[i][sids[i]][sids[i+1]])
+
+		# sum up the scores of the nodes
+		for i in xrange(self.length) : 
+			ll+=  np.log(self.seqphi[i][sids[i]])
+			ll+= np.log(self.featphi[i][fids[i]])
+		return ll
+
+
 	def decode(self,obs)  : 
 		""" Perform max decoding to get the optimal sequence """
-		pass
+		# convert feature to ids
+		fids = [featmap[f] for featmap,f in zip(self.featmap,obs)]
+		V = []
+		Ptr = []
+		# For the first element
+		V.append(map(lambda(k):np.log(self.emitpsi[0][k][fids[0]])\
+			+np.log(self.seqphi[k]),range(self.dims[0][0])))
+
+		# For the rest of the elements
+		for i in range(1,hmm.length) :
+			ptr_k = []; V_k = [];
+			for k in range(self.dims[i][0]) :
+				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])+V[i-1][j],\
+					range(self.dims[i-1][0]))
+				maxX = max(X)
+				ptr_k.append(X.index(maxX))
+				V_k.append(np.log(self.emitpsi[i][k][fids[i]])+maxX)
+			Ptr.append(ptr_k)
+			V.append(V_k)
+
+		# retreive the optimal sequence
+		seq_max = []
+		seq_max.append(V[-1].index(max(V[-1])))
+		energy_max = V[-1][seq_max[-1]]
+		for ptr_k in reversed(Ptr) :
+			seq_max.append(ptr_k[seq_max[-1]])
+		seq_max.reverse()
+		
+		# map it back to the original sequence
+		decode_seq = "".join([self.seqmap2[i][seqid] \
+			for i,seqid in enumerate(seq_max)])
+	
+		return energy_max,decode_seq
 
 	def sample(self) :
 		""" Sample from the HMM"""
@@ -177,6 +268,8 @@ class CMRF(object) :
 			sys.stderr.write("HMM not yet trained. Cannot Sample!")
 			return
 		pass
+
+
 
 class DataSet(object) : 
 	""" A placeholder for defining training data """
@@ -252,6 +345,13 @@ if __name__ == '__main__' :
 	cmrf = CMRF(hmm)	
 	print("CMRF seq:{} feat:{} score:{}".\
 		format(seq1,feat1,cmrf.score(seq1,feat1)))
+
+	print("*"*10+"Decoding CMRF"+"*"*10)
+	score,seq = hmm.decode(feat1)	
+	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat1))
+	feat3 = "HHHHLLLLBBBB"
+	score,seq = hmm.decode(feat3)	
+	print("Decoded seq:{} energy:{} feat:{}".format(seq,score,feat3))
 
 
 

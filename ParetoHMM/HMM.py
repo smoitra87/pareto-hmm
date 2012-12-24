@@ -137,7 +137,7 @@ class CMRF(object) :
 		for i in xrange(self.length) : 
 			ll+=  np.log(self.seqphi[i][sids[i]])
 			ll+= np.log(self.featphi[i][fids[i]])
-		return ll
+		return -ll
 
 
 	def decode(self,obs)  : 
@@ -151,7 +151,7 @@ class CMRF(object) :
 			+np.log(self.seqphi[0][k]),range(self.dims[0][0])))
 
 		# For the rest of the elements
-		for i in range(1,hmm.length) :
+		for i in range(1,self.length) :
 			ptr_k = []; V_k = [];
 			for k in range(self.dims[i][0]) :
 				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])+V[i-1][j],\
@@ -175,7 +175,7 @@ class CMRF(object) :
 		decode_seq = "".join([self.seqmap2[i][seqid] \
 			for i,seqid in enumerate(seq_max)])
 	
-		return energy_max,decode_seq
+		return -energy_max,decode_seq
 
 	def sample(self) :
 		""" Sample from the HMM"""
@@ -229,7 +229,7 @@ class TMRF(object) :
 		for i in xrange(self.length) : 
 			ll+=  np.log(self.seqphi[i][sids[i]])
 			ll+= np.log(self.featphi[i][fids[i]])
-		return ll
+		return -ll
 		
 
 	def decode(self)  : 
@@ -253,7 +253,7 @@ class TMRF(object) :
 		V.append(v_k)
 
 		# For the rest of the elements
-		for i in range(1,hmm.length) :
+		for i in range(1,self.length) :
 			ptr_k = []; V_k = [];
 			for k in range(self.dims[i][0]) :
 				X = map(lambda(j):np.log(self.seqpsi[i-1][j][k])\
@@ -278,7 +278,7 @@ class TMRF(object) :
 		decode_seq = "".join([self.seqmap2[i][seqid] \
 			for i,seqid in enumerate(seq_max)])
 	
-		return energy_max,decode_seq
+		return -energy_max,decode_seq
 
 	def sample(self) :
 		""" Sample from the HMM"""

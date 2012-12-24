@@ -11,6 +11,7 @@ import numpy as np
 import scipy as sci
 from HMM import HMM,CMRF,TMRF
 from itertools import product
+from cvxhull import pareto_frontier 
 
 def set_params_hmm_exp1(hmm) : 
 	""" Sets the params of a hmm for sim experiment 1"""
@@ -38,23 +39,26 @@ if __name__ == '__main__' :
 	seq2 = 'b'*12
 	feat2 = 'BBBBLLLLBBBB'
 
-
-	
-	
 	# Plot the entire sequence space
 	ll_list1,ll_list2 = [],[]
 	for seq in product('ab',repeat=12):	
 		ll_list1.append(cmrf.score(seq,feat1))
 		ll_list2.append(cmrf.score(seq,feat2))
 
+	# Find the pareto frontier
+	frontier,frontier_energy = pareto_frontier(cmrf,[feat1,feat2])
+
 	pl.figure()
 	pl.plot(ll_list1,ll_list2,'b*')
+	pl.plot(*list(zip(*frontier_energy)),color='magenta',linestyle='*')
+	
 	pl.xlabel('Energy:'+feat1)
 	pl.ylabel('Energy:'+feat2)
 	pl.title('Energy Plot')
 	xmin,xmax = pl.xlim()
 	ymin,ymax = pl.ylim()
-	pl.xlim(xmin,2)
-	pl.ylim(ymin,2)
+	pl.xlim(-2,xmax)
+	pl.ylim(-2,ymax)
 	pl.axvline()
 	pl.axhline()
+	

@@ -1,5 +1,5 @@
 """
-Simulation Study 1 :
+Simulation Study 2 :
 Create a 12 length protein
 
 @author: smoitra@cs.cmu.edu
@@ -12,16 +12,23 @@ import scipy as sci
 from HMM import HMM,CMRF,TMRF
 from itertools import product
 from cvxhull import pareto_frontier 
+import random
+
+
+def gen_random_dist(size) : 
+	x = np.random.uniform(size=size)
+	x = x/sum(x)
+	return x
 
 def set_params_hmm_exp1(hmm) : 
 	""" Sets the params of a hmm for sim experiment 1"""
 	hmm.length = 12
 	hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
 	hmm.emit = [
-		[[0.6,0.2,0.2],[0.2,0.6,0.2]]
+		[gen_random_dist(3),gen_random_dist(3)]
 	]*hmm.length
 	hmm.trans = [
-		[[0.7,0.3],[0.3,0.7]]
+		[gen_random_dist(2),gen_random_dist(2)]
 	]*hmm.length
 	hmm.seqmap = [{'a':0,'b':1}]*hmm.length
 	hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
@@ -62,4 +69,5 @@ if __name__ == '__main__' :
 	pl.ylim(-2,ymax)
 	pl.axvline()
 	pl.axhline()
-	pl.savefig('../docs/tex/pics/sim1.pdf')
+	pl.savefig('../docs/tex/pics/sim2.pdf')
+	pl.show()

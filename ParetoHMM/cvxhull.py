@@ -16,6 +16,7 @@ def pareto_frontier(cmrf,featlist) :
 		two competing states only
 	 """
 	Q = []
+	taboodict = {}
 	nStates = len(featlist)
 	feat1,feat2 = featlist
 	Eaxa,Xa = cmrf.decode(feat1)
@@ -28,6 +29,8 @@ def pareto_frontier(cmrf,featlist) :
 	frontier,frontier_energy = [],[]
 	frontier.extend([Xa,Xb])
 	frontier_energy.extend([(Eaxa,Ebxa),(Eaxb,Ebxb)])
+	taboodict[(Eaxa,Ebxa)] = 1;
+	taboodict[(Eaxb,Ebxb)] = 1;
 	while len(Q) > 0 :
 		### Optimize 
 		Xa,Xb = Q[0]
@@ -45,11 +48,13 @@ def pareto_frontier(cmrf,featlist) :
 		thetab = 1/(1-m)
 		tmrf = TMRF(cmrf,[thetaa,thetab],[feat1,feat2])
 		Xab = tmrf.decode()[1]
-		if Xab != Xa and Xab != Xb : 
+		Eaxab = cmrf.score(Xab,feat1)
+		Ebxab = cmrf.score(Xab,feat2)
+		if Xab != Xa and Xab != Xb and \
+			not taboodict.has_key((Eaxab,Ebxab)): 
 			frontier.append(Xab)
-			Eaxab = cmrf.score(Xab,feat1)
-			Ebxab = cmrf.score(Xab,feat2)
 			frontier_energy.append((Eaxab,Ebxab))
+			taboodict[(Eaxab,Ebxab)]=1
 			Q.extend([(Xa,Xab),(Xab,Xb)])
 	# Calculate energy of frontier elements	
 	return frontier,frontier_energy

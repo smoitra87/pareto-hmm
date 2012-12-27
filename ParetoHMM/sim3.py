@@ -1,7 +1,6 @@
 """
 Simulation Study 2 :
-Create a 12 length protein
-Run Pareto Frontier
+Run a number of different simulation studies
 
 @author: smoitra@cs.cmu.edu
 @license: BSD
@@ -36,6 +35,12 @@ def set_params_hmm_exp1(hmm) :
 	hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
 	hmm.initprob = [0.5,0.5]
 	hmm.trained = True
+
+class SimExp(object) :
+	""" Helps run a number of different simulation experiments """
+	def __init__(self)	:
+		pass
+
 
 if __name__ == '__main__' : 
 	hmm = HMM()
@@ -87,15 +92,15 @@ if __name__ == '__main__' :
 	# Plot all the points 
 	pl.figure()
 	pl.plot(ll_list1,ll_list2,'b*')
-	pl.plot(*zip(*sorted(frontier_energy)),color='magenta',marker='*',\
+	pl.plot(*sorted(zip(*frontier_energy)),color='magenta',marker='*',\
 		linestyle='dashed')
 	pl.xlabel('Energy:'+feat1)
 	pl.ylabel('Energy:'+feat2)
 	pl.title('Energy Plot')
 	xmin,xmax = pl.xlim()
 	ymin,ymax = pl.ylim()
-	pl.xlim(xmin,xmax)
-	pl.ylim(ymin,ymax)
+	pl.xlim(-2,xmax)
+	pl.ylim(-2,ymax)
 	pl.axvline()
 	pl.axhline()
 	pl.savefig('../docs/tex/pics/sim2_all.pdf')

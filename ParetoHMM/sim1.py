@@ -50,9 +50,19 @@ if __name__ == '__main__' :
 
 	pl.figure()
 	pl.plot(ll_list1,ll_list2,'b*')
-	pl.plot(*zip(*frontier_energy),color='magenta',marker='*',\
+	pl.plot(*zip(*sorted(frontier_energy)),color='magenta',marker='*',\
 		linestyle='dashed')
-	
+	ctr = dict(zip(set(frontier_energy),[0]*len(set(frontier_energy))))
+	for i,e in enumerate(frontier_energy) : 
+		ctr[e] += 1
+		if i == 0 :
+			pl.text(e[0]+0.5,e[1]-0.4,str(i),fontsize=10)
+			pl.text(e[0]-3,e[1]+0.8,frontier[i],fontsize=9)	
+		else :
+			pl.text(e[0]+0.5,e[1]-0.4,str(i),fontsize=10)
+			pl.text(e[0]-3,e[1]-1.5,frontier[i],fontsize=9)	
+
+
 	pl.xlabel('Energy:'+feat1)
 	pl.ylabel('Energy:'+feat2)
 	pl.title('Energy Plot')
@@ -63,3 +73,4 @@ if __name__ == '__main__' :
 	pl.axvline()
 	pl.axhline()
 	pl.savefig('../docs/tex/pics/sim1.pdf')
+	pl.show()

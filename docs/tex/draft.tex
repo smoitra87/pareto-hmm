@@ -560,6 +560,7 @@ X^{\dagger} &= \arg \min_X \left( \theta_A E_A'(X)  + \theta_B E_B'(X) \right) \
 
 This shows that normalizing the energy function values by $Z_A$ and $Z_B$ is not necessary in order to find point on the pareto optimal frontier. This is further demonstrated in Figure~\ref{fig:cvxfront2}.
 
+
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.9\textwidth]{pics/convexfront2.pdf}
@@ -619,6 +620,15 @@ This can be done as
 
 \paragraph{Decode All seq} : It may be possible to find all the sequences that give the same energy rather than just return only one of them. this can be done by storing a list of pointers during the DP 
 decoding.
+
+\paragraph{Multiple sequence Same Energy} :  Currently the cvhull algorithm is being thrown out of gear by sequences that have the same energy. An example of this situation is shown in Figure~\ref{fig:sim2_debug1}
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\textwidth]{pics/sim2_debug1.pdf}
+    \caption{This figure illustrates the issue when there are multiple sequences with the same energy. Here sequences 3 and 4 have the same energy. This causes the convex hull algorithm to fail in its current implementation.   }
+    \label{fig:sim2_debug1}
+\end{figure}
+\pagebreak
 
 
 \subsection{Theory Notes}

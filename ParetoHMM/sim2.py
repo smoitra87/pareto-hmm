@@ -1,6 +1,7 @@
 """
 Simulation Study 2 :
 Create a 12 length protein
+Run Pareto Frontier
 
 @author: smoitra@cs.cmu.edu
 @license: BSD
@@ -13,7 +14,7 @@ from HMM import HMM,CMRF,TMRF
 from itertools import product
 from cvxhull import pareto_frontier 
 import random
-
+DEBUG=1
 
 def gen_random_dist(size) : 
 	x = np.random.uniform(size=size)
@@ -46,28 +47,52 @@ if __name__ == '__main__' :
 	seq2 = 'b'*12
 	feat2 = 'BBBBLLLLBBBB'
 
+	### DEBUG
+	import pickle
+	cmrf = pickle.load(open('cmrf.pkl'))
+
+
 	# Plot the entire sequence space
 	ll_list1,ll_list2 = [],[]
-	for seq in product('ab',repeat=12):	
+	seq_list = ["".join(s) for s in product('ab',repeat=12)]
+	for seq in seq_list:	
 		ll_list1.append(cmrf.score(seq,feat1))
 		ll_list2.append(cmrf.score(seq,feat2))
+
+	min_feat1id = ll_list1.index(min(ll_list1))
+	min_feat2id = ll_list2.index(min(ll_list2))
 
 	# Find the pareto frontier
 	frontier,frontier_energy = pareto_frontier(cmrf,[feat1,feat2])
 
 	pl.figure()
-	pl.plot(ll_list1,ll_list2,'b*')
+	#pl.plot(ll_list1,ll_list2,'b*')
 	pl.plot(*zip(*frontier_energy),color='magenta',marker='*',\
 		linestyle='dashed')
-	
+	if DEBUG :
+		ctr = dict(zip(set(frontier_energy),[0]*\
+			len(set(frontier_energy))))
+		for i,e in enumerate(frontier_energy) : 
+			ctr[e] += 1
+			pl.text(e[0],e[1]+0.1*ctr[e],str(i),fontsize=8)
+			pl.text(e[0]+0.1,e[1]+0.1*ctr[e],frontier[i],fontsize=7)	
+
 	pl.xlabel('Energy:'+feat1)
 	pl.ylabel('Energy:'+feat2)
 	pl.title('Energy Plot')
 	xmin,xmax = pl.xlim()
 	ymin,ymax = pl.ylim()
-	pl.xlim(-2,xmax)
-	pl.ylim(-2,ymax)
+	if DEBUG : 
+		pl.xlim(xmin,xmax)
+		pl.ylim(ymin,ymax)
+	else: 
+		pl.xlim(-2,xmax)
+		pl.ylim(-2,ymax)
+
 	pl.axvline()
 	pl.axhline()
-	pl.savefig('../docs/tex/pics/sim2.pdf')
+	if DEBUG : 
+		pl.savefig('../docs/tex/pics/sim2_debug.pdf')
+	else : 
+		pl.savefig('../docs/tex/pics/sim2.pdf')
 	pl.show()

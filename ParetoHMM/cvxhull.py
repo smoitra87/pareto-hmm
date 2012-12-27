@@ -9,7 +9,7 @@ import os,sys
 import pylab as pl
 from HMM import HMM,CMRF, TMRF
 from pdb import set_trace as stop
-
+import warnings
 
 def pareto_frontier(cmrf,featlist) :
 	"""Finds and prints the pareto frontier. Currently works for 
@@ -20,8 +20,10 @@ def pareto_frontier(cmrf,featlist) :
 	feat1,feat2 = featlist
 	Eaxa,Xa = cmrf.decode(feat1)
 	Ebxb,Xb = cmrf.decode(feat2)
-	Eaxb = cmrf.score(Xa,feat2)
-	Ebxa = cmrf.score(Xb,feat1)
+	if Xa == Xb : 
+		return [Xa],[(Eaxa,Ebxb)]
+	Eaxb = cmrf.score(Xb,feat1)
+	Ebxa = cmrf.score(Xa,feat2)
 	Q.append((Xa,Xb))
 	frontier,frontier_energy = [],[]
 	frontier.extend([Xa,Xb])
@@ -34,8 +36,11 @@ def pareto_frontier(cmrf,featlist) :
 		Ebxa = cmrf.score(Xa,feat2)	
 		Eaxa = cmrf.score(Xa,feat1)
 		Ebxb = cmrf.score(Xb,feat2)	
-
 		m = (Ebxa - Ebxb)/(Eaxa-Eaxb)
+		if m > 0 : 
+			#stop()
+			sys.stderr.write("### WARNING : Slope > 0. Cvxhull failed")
+			return frontier,frontier_energy
 		thetaa = -m/(1-m)
 		thetab = 1/(1-m)
 		tmrf = TMRF(cmrf,[thetaa,thetab],[feat1,feat2])

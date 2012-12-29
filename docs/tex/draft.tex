@@ -790,6 +790,14 @@ decoding.
 
 \paragraph{Benchmarking} : It is important to compare the performance of our algorithm with some other well known protein design algorithms. This is important from the purpose of getting a paper accepted. The more evidence you can provide the more convincing a paper is. 
 
+Current benchmarking algorithms  : 
+\begin{itemize}
+\item Brute Force - Simply enumerate and find the frontier
+\item MCMC - Sample a number of sequences according to your energy function and keep the minimum. Should one apply Metropolis Hastings criteria usign Boltzmannm weights or something else
+\item Goldstein DEE - Need a way to assign pairwise energies between amino acids. 
+\item Yanover multistate DEE - Same as before but again need to assign weights. 
+\end{itemize}
 
+Also, multistate sequences designed by me are going to be good only so far as my emission and transmission weights are accurate. There needs to be a goldstandard way of assigning proper energies to the rotamers. 
 
 \end{document}

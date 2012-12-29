@@ -15,47 +15,51 @@ from cvxhull import pareto_frontier
 import random
 DEBUG=0
 
-def gen_random_dist(size) : 
-	x = np.random.uniform(size=size)
-	x = x/sum(x)
-	return x
-
-def set_params_hmm_exp1(hmm) : 
-	""" Sets the params of a hmm for sim experiment 1"""
-	hmm.length = 12
-	hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
-	hmm.emit = [
-		[gen_random_dist(3),gen_random_dist(3)]
-	]*hmm.length
-	hmm.trans = [
-		[gen_random_dist(2),gen_random_dist(2)]
-	]*hmm.length
-	hmm.seqmap = [{'a':0,'b':1}]*hmm.length
-	hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
-	hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
-	hmm.initprob = [0.5,0.5]
-	hmm.trained = True
 
 class SimExp(object) :
 	""" Helps run a number of different simulation experiments """
-	def __init__(self)	:
-		pass
+	def __init__(self,name,ntimes,nlength=12,nstates=2,tied=True)	:
+		self.name = name #name of experiment
+		self.ntimes = ntimes # number of times to repeat the exp
+		hmm = HMM()		
+		set_params_hmm(hmm)
+		cmrf = CMRF(hmm)
 
+	def set_feats_standard(self) : 
+		self.feats = [
+			feat1 = 'HHHHLLLLHHHH'
+			feat2 = 'BBBBLLLLBBBB'
+		]
+
+
+	def gen_random_dist(size) : 
+		x = np.random.uniform(size=size)
+		x = x/sum(x)
+		return x
+	
+	def set_params_hmm(hmm) : 
+		""" Sets the params of a hmm for sim experiment 1"""
+		hmm.length = 12
+		hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
+		hmm.emit = [
+			[gen_random_dist(3),gen_random_dist(3)]
+		]*hmm.length
+		hmm.trans = [
+			[gen_random_dist(2),gen_random_dist(2)]
+		]*hmm.length
+		hmm.seqmap = [{'a':0,'b':1}]*hmm.length
+		hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
+		hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
+		hmm.initprob = [0.5,0.5]
+		hmm.trained = True
 
 if __name__ == '__main__' : 
 	hmm = HMM()
 	# Set the params of the h,,
-	set_params_hmm_exp1(hmm)
-	cmrf = CMRF(hmm)
-	seq1 = 'a'*12
-	feat1 = 'HHHHLLLLHHHH'
-	seq2 = 'b'*12
-	feat2 = 'BBBBLLLLBBBB'
 
 	### DEBUG
 	import pickle
 	cmrf = pickle.load(open('cmrf.pkl'))
-
 
 	# Plot the entire sequence space
 	ll_list1,ll_list2 = [],[]
@@ -69,7 +73,6 @@ if __name__ == '__main__' :
 
 	# Find the pareto frontier
 	frontier,frontier_energy = pareto_frontier(cmrf,[feat1,feat2])
-
 
 	# Plot only the frontier
 	pl.figure()

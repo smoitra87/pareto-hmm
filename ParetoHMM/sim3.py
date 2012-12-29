@@ -18,7 +18,8 @@ DEBUG=0
 
 class SimExp(object) :
 	""" Helps run a number of different simulation experiments """
-	def __init__(self,name,ntimes,nlength=12,nstates=2,tied=True)	:
+	def __init__(self,name,ntimes=10,nlength=12,nstates=2,tied=True\
+		)	:
 		self.name = name #name of experiment
 		self.ntimes = ntimes # number of times to repeat the exp
 		hmm = HMM()		
@@ -30,8 +31,6 @@ class SimExp(object) :
 			feat1 = 'HHHHLLLLHHHH'
 			feat2 = 'BBBBLLLLBBBB'
 		]
-
-
 	def gen_random_dist(size) : 
 		x = np.random.uniform(size=size)
 		x = x/sum(x)

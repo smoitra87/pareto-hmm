@@ -18,13 +18,34 @@ DEBUG=0
 
 class SimExp(object) :
 	""" Helps run a number of different simulation experiments """
-	def __init__(self,name,ntimes=10,nlength=12,nstates=2,tied=True\
+	def __init__(self,name,ntimes=10,length=12,seqstates=2,tied=True\
 		)	:
+		""" Set up the simulation study according to the parameters 
+		specified"""
 		self.name = name #name of experiment
 		self.ntimes = ntimes # number of times to repeat the exp
-		hmm = HMM()		
-		set_params_hmm(hmm)
-		cmrf = CMRF(hmm)
+		self.length = length
+		self.seqstates = seqstates
+		self.tied = tied
+		self.hmm = HMM()	
+		self.namemap = {
+		'toy' : self.toy
+		'randprobs' : self.randprobs
+		'randprobstied' : self.randprobstied
+		}	
+		self.namemap[self.name]()
+		self.execute()
+
+	def toy(self) :
+		""" Set up the toy simulation """
+		pass
+
+	def randprobs(self) : 
+		""" Set up a version of toy with non-trivial surface """
+		pass
+
+	def randprobstied(self) : 
+		""" Run many iterations of toy with random probs  """
 
 	def set_feats_standard(self) : 
 		self.feats = [
@@ -52,13 +73,27 @@ class SimExp(object) :
 		hmm.initprob = [0.5,0.5]
 		hmm.trained = True
 
-if __name__ == '__main__' : 
-	hmm = HMM()
-	# Set the params of the h,,
+	def bruteforce(self)  :
+		""" Run Brute force enumeration of the sequence space """
+		feat1,feat2 = self.feats
+		ll_list1,ll_list2 = [],[]
+		
+		seq_list = ["".join(s) for s in product('ab',repeat=12)]
+		for seq in seq_list:	
+			ll_list1.append(cmrf.score(seq,feat1))
+			ll_list2.append(cmrf.score(seq,feat2))
+	
+		min_feat1id = ll_list1.index(min(ll_list1))
+		min_feat2id = ll_list2.index(min(ll_list2))
 
-	### DEBUG
-	import pickle
-	cmrf = pickle.load(open('cmrf.pkl'))
+
+	def mcmc(self) : 
+		""" Run mcmc on the same problem instance """
+		### TODO
+		pass
+
+
+if __name__ == '__main__' : 
 
 	# Plot the entire sequence space
 	ll_list1,ll_list2 = [],[]

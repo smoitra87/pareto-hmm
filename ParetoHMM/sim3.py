@@ -95,7 +95,64 @@ class SimExp(object) :
 
 	def randprobs(self) : 
 		""" Set up a version of toy with non-trivial surface """
-		pass
+		self.tasklist = []
+		feats = self.get_feats_standard()
+		hmm = HMM()
+		self._set_params_randprobs(hmm)
+		cmrf = CMRF(hmm)
+		for taskid in range(self.ntimes) :	
+			task = Task('sim'+STUDY+'_'+self.name+'_'+str(taskid),cmrf,\
+				feats)				
+			# Run Brute force to enumerate the frontier
+			with benchmark(task.name+'brute') as t:
+				seq,energies = self.bruteforce(cmrf,feats)			
+			task.all_seq = seq
+			task.all_seq_energy = energies
+			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier()
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+
+	def _set_params_randprobs(self,hmm) :
+		""" Sets the params of a hmm for sim experiment 1"""
+		hmm.length = 12
+		hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
+		hmm.emit = [
+			[[0.334,0.272,0.394],[0.477,0.093,0.430]]
+		]*hmm.length
+		hmm.trans = [
+			[[0.483,0.517],[0.589,0.411]]
+		]*hmm.length
+
+		hmm.seqmap = [{'a':0,'b':1}]*hmm.length
+		hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
+		hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
+		hmm.initprob = [0.5,0.5]
+		hmm.trained = True
+
+
+	def set_params_randprobstied(hm) : 
+		""" Sets the params of a hmm for sim experiment 1"""
+		hmm.length = 12
+		hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
+		hmm.emit = [
+			[gen_random_dist(3),gen_random_dist(3)]
+		]*hmm.length
+		hmm.trans = [
+			[gen_random_dist(2),gen_random_dist(2)]
+		]*hmm.length
+		hmm.seqmap = [{'a':0,'b':1}]*hmm.length
+		hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
+		hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
+		hmm.initprob = [0.5,0.5]
+		hmm.trained = True
+
 
 	def randprobstied(self) : 
 		""" Run many iterations of toy with random probs  """
@@ -113,22 +170,6 @@ class SimExp(object) :
 		x = np.random.uniform(size=size)
 		x = x/sum(x)
 		return x
-
-	def set_params_hmm(hmm) : 
-		""" Sets the params of a hmm for sim experiment 1"""
-		hmm.length = 12
-		hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
-		hmm.emit = [
-			[gen_random_dist(3),gen_random_dist(3)]
-		]*hmm.length
-		hmm.trans = [
-			[gen_random_dist(2),gen_random_dist(2)]
-		]*hmm.length
-		hmm.seqmap = [{'a':0,'b':1}]*hmm.length
-		hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
-		hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
-		hmm.initprob = [0.5,0.5]
-		hmm.trained = True
 
 	def bruteforce(self,cmrf,feats)  :
 		""" Run Brute force enumeration of the sequence space """
@@ -209,9 +250,9 @@ if __name__ == '__main__' :
 
 	# Run sim experiment 1 - toy
 	#sim1 = SimExp('toy',plot_all=True)	
-	sim1 = SimExp('toy')	
+	sim1 = SimExp('toy',ntimes=1,plot_all=True)	
 	sim1.execute()	
 
 	# Run sim experiment 2 - 	
-#	sim2 = SimExp('randprobs')
-#	sim2.execute()
+	sim2 = SimExp('randprobs',ntimes=1,plot_all=True)
+	sim2.execute()

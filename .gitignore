@@ -3,6 +3,7 @@
 *~
 *.swp
 docs/tex/*
+ParetoHMM/data
 !docs/tex/*.tex
 !docs/tex/*.bib
 !docs/tex/*.py

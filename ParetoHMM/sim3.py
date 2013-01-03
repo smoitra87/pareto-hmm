@@ -43,7 +43,10 @@ class SimExp(object) :
 		namemap = {
 		'toy' : self.toy,
 		'randprobs' : self.randprobs,
-		'randprobstied' : self.randprobstied
+		'randprobstied' : self.randprobstied,
+		'randprobsuntied' : self.randprobsuntied,
+		'randfeatstied' : self.randfeatstied,
+		'randfeatsuntied' : self.randfeatsuntied
 		}	
 		namemap[self.name]()
 		with open('data/sim'+str(STUDY)+'_'+self.name+'.pkl','w') as \
@@ -182,6 +185,118 @@ class SimExp(object) :
 		hmm.initprob = [0.5,0.5]
 		hmm.trained = True
 
+	def randprobsuntied(self) : 
+		""" Run many iterations of toy with random probs  """
+		self.tasklist = []
+		feats = self.get_feats_standard()
+	
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_randprobsuntied(hmm)
+			cmrf = CMRF(hmm)	
+			task = Task('sim'+STUDY+'_'+self.name+'_'+str(taskid),cmrf,\
+				feats)				
+			# Run Brute force to enumerate the frontier
+			with benchmark(task.name+'brute') as t:
+				seq,energies = self.bruteforce(cmrf,feats)			
+			task.all_seq = seq
+			task.all_seq_energy = energies
+			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier()
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+
+	def _set_params_randprobsuntied(self,hmm) : 
+		""" Sets the params of a hmm for sim experiment 1"""
+		hmm.length = 12
+		hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
+		hmm.emit,hmm.trans = [],[]
+		for i in range(hmm.length) : 
+			hmm.emit.append(
+				[self.gen_random_dist(3),self.gen_random_dist(3)]
+			)
+			hmm.trans.append(
+				[self.gen_random_dist(2),self.gen_random_dist(2)]
+			)
+		hmm.seqmap = [{'a':0,'b':1}]*hmm.length
+		hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
+		hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
+		hmm.initprob = [0.5,0.5]
+		hmm.trained = True
+	
+	def randfeatstied(self) : 
+		""" Run many iterations of toy with random probs  """
+		self.tasklist = []
+		feats = self.get_feats_standard()
+	
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_randprobstied(hmm)
+			cmrf = CMRF(hmm)	
+			feats = self._gen_feats_random()
+			task = Task('sim'+STUDY+'_'+self.name+'_'+str(taskid),cmrf,\
+				feats)				
+			# Run Brute force to enumerate the frontier
+			with benchmark(task.name+'brute') as t:
+				seq,energies = self.bruteforce(cmrf,feats)			
+			task.all_seq = seq
+			task.all_seq_energy = energies
+			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier()
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+
+	def randfeatsuntied(self) : 
+		""" Run many iterations of toy with random probs  """
+		self.tasklist = []
+		feats = self.get_feats_standard()
+	
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_randprobsuntied(hmm)
+			cmrf = CMRF(hmm)	
+			feats = self._gen_feats_random()
+			task = Task('sim'+STUDY+'_'+self.name+'_'+str(taskid),cmrf,\
+				feats)				
+			# Run Brute force to enumerate the frontier
+			with benchmark(task.name+'brute') as t:
+				seq,energies = self.bruteforce(cmrf,feats)			
+			task.all_seq = seq
+			task.all_seq_energy = energies
+			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier()
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+
+	def _gen_feats_random(self) :
+		""" Generate random features """
+		feats = [
+			"".join(map(lambda x : random.choice('HLB'),range(12))),
+			"".join(map(lambda x : random.choice('HLB'),range(12)))
+		]
+		return feats
+
 	def get_feats_standard(self) :
 		""" Set the features to be standard """ 
 		feats = [
@@ -282,7 +397,19 @@ if __name__ == '__main__' :
 	sim.execute()
 
 	# Run sim experiment 3
-	sim = SimExp('randprobstied',ntimes=10,plot_all=True)
+	sim = SimExp('randprobstied',ntimes=1,plot_all=True)
+	sim.execute()
+
+	# Run sim experiment 4
+	sim = SimExp('randprobsuntied',ntimes=1,plot_all=True)
+	sim.execute()
+
+	# Run sim experiment 5
+	sim = SimExp('randfeatstied',ntimes=1,plot_all=True)
+	sim.execute()
+
+	# Run sim experiment 6
+	sim = SimExp('randfeatsuntied',ntimes=1,plot_all=True)
 	sim.execute()
 
 

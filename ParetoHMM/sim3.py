@@ -23,7 +23,7 @@ STUDY='3'
 class SimExp(object) :
 	""" Helps run a number of different simulation experiments """
 	def __init__(self,name,ntimes=10,length=12,seqstates=2,tied=True\
-		,plot_all=False)	:
+		,plot_all=False,**kwdargs)	:
 		""" Set up the simulation study according to the parameters 
 		specified"""
 		self.name = name #name of experiment
@@ -32,7 +32,7 @@ class SimExp(object) :
 		self.seqstates = seqstates
 		self.tied = tied
 		self.plot_all = plot_all
-
+		self.kwdargs = kwdargs
 		# Set the random seed
 	
 	def execute(self)  :
@@ -46,7 +46,12 @@ class SimExp(object) :
 		'randprobstied' : self.randprobstied,
 		'randprobsuntied' : self.randprobsuntied,
 		'randfeatstied' : self.randfeatstied,
-		'randfeatsuntied' : self.randfeatsuntied
+		'randfeatsuntied' : self.randfeatsuntied,
+		'seqspace' : self.seqspace , 
+		'seqlen' :  self.seqlen , 
+		'seqspacelen': self.seqspacelen,
+		'featspace' : self.featspace,
+		'featspacelen' : self.featspacelen
 		}	
 		namemap[self.name]()
 		with open('data/sim'+str(STUDY)+'_'+self.name+'.pkl','w') as \
@@ -289,12 +294,96 @@ class SimExp(object) :
 			task.pareto_time = t.elapsed
 			self.tasklist.append(task)	
 
+	def _set_params_generic(self,hmm,length,dims) : 
+		""" Sets the params of a hmm for sim experiment """
+		hmm.length = length
+		hmm.dims = dims # (latent,emit) dimspace
+		hmm.emit,hmm.trans = [],[]
+		for i in range(hmm.length) : 
+			hmm.emit.append(
+				[self.gen_random_dist(dims[i][1]) \
+					for j in range(dims[i][0])]
+			)
+			hmm.trans.append(
+				[self.gen_random_dist(dims[i][0]) \
+					for j in range(dims[i][0])]
+			)
+		seqspace = 'ACDEFGHIKLMNPQRSTVWY'.lower()
+		seqdict2 = dict(enumerate(seqspace))
+		seqdict = dict([(a,i) for i,a in enumerate(seqspace)])
+		hmm.seqmap = [seqdict]*hmm.length
+		hmm.seqmap2 = [seqdict2]*hmm.length
+		featspace = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()/*-+'
+		featdict = dict([(a,i) for i,a in enumerate(featspace)])
+		hmm.featmap = [featdict]*hmm.length
+		hmm.initprob = [1.0/dims[0][0]]*dims[0][0]
+		hmm.trained = True
+
+	def seqspace(self) :
+		""" Vary sequence space """
+		self.tasklist = []
+		feats = self.get_feats_standard()
+		featspace = 3
+		seqlen = 12
+		dims = [(self.kwdargs['seqspace'],featspace)]*seqlen
+
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_generic(hmm,seqlen,dims)
+			cmrf = CMRF(hmm)	
+			feats = self._gen_feats_generic(seqlen,featspace)
+			task = Task('sim'+STUDY+'_'+self.name+'_'+\
+				str(self.kwdargs['seqspace'])+\
+				'_'+str(taskid),cmrf,feats)				
+			# Run Brute force to enumerate the frontier
+			with benchmark(task.name+'brute') as t:
+				seq,energies = self.bruteforce(cmrf,feats)			
+			task.all_seq = seq
+			task.all_seq_energy = energies
+			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier()
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+
+	def seqlen(self) : 
+		""" Vary sequence length"""
+		pass
+
+	def seqspacelen(self)  :
+		""" Vary sequence space and length"""
+		pass
+
+	def featspace(self) :	
+		""" Vary the feature space"""
+		pass
+
+ 	def featspacelen(self) : 
+		""" Vary the feature space and the sequence length """
+		pass
+
 	def _gen_feats_random(self) :
 		""" Generate random features """
 		feats = [
 			"".join(map(lambda x : random.choice('HLB'),range(12))),
 			"".join(map(lambda x : random.choice('HLB'),range(12)))
 		]
+		return feats
+
+	def _gen_feats_generic(self,seqlen,featspace) :
+		""" Generate random features """
+		featalpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()/*-+'
+		featalpha = featalpha[:featspace]
+		feats = []
+		for i in xrange(2) :
+			feats.append("".join(map(lambda x : \
+				random.choice(featalpha),range(seqlen))))
 		return feats
 
 	def get_feats_standard(self) :
@@ -314,8 +403,9 @@ class SimExp(object) :
 		""" Run Brute force enumeration of the sequence space """
 		feat1,feat2 = feats
 		ll_list1,ll_list2 = [],[]
-		
-		seq_list = ["".join(s) for s in product('ab',repeat=12)]
+		seqdim = cmrf.dims[0][0]	
+		seqspace ='ACDEFGHIKLMNPQRSTVWY'[:seqdim].lower()
+		seq_list = ["".join(s) for s in product(seqspace,repeat=12)]
 		for seq in seq_list:	
 			ll_list1.append(cmrf.score(seq,feat1))
 			ll_list2.append(cmrf.score(seq,feat2))
@@ -389,27 +479,31 @@ if __name__ == '__main__' :
 
 	# Run sim experiment 1 - toy
 	#sim1 = SimExp('toy',plot_all=True)	
-	sim = SimExp('toy',ntimes=1,plot_all=True)	
-	sim.execute()	
+#	sim = SimExp('toy',ntimes=1,plot_all=True)	
+#	sim.execute()	
+#
+#	# Run sim experiment 2 - 	
+#	sim = SimExp('randprobs',ntimes=1,plot_all=True)
+#	sim.execute()
+#
+#	# Run sim experiment 3
+#	sim = SimExp('randprobstied',ntimes=1,plot_all=True)
+#	sim.execute()
+#
+#	# Run sim experiment 4
+#	sim = SimExp('randprobsuntied',ntimes=1,plot_all=True)
+#	sim.execute()
+#
+#	# Run sim experiment 5
+#	sim = SimExp('randfeatstied',ntimes=1,plot_all=True)
+#	sim.execute()
+#
+#	# Run sim experiment 6
+#	sim = SimExp('randfeatsuntied',ntimes=1,plot_all=True)
+#	sim.execute()
 
-	# Run sim experiment 2 - 	
-	sim = SimExp('randprobs',ntimes=1,plot_all=True)
-	sim.execute()
-
-	# Run sim experiment 3
-	sim = SimExp('randprobstied',ntimes=1,plot_all=True)
-	sim.execute()
-
-	# Run sim experiment 4
-	sim = SimExp('randprobsuntied',ntimes=1,plot_all=True)
-	sim.execute()
-
-	# Run sim experiment 5
-	sim = SimExp('randfeatstied',ntimes=1,plot_all=True)
-	sim.execute()
-
-	# Run sim experiment 6
-	sim = SimExp('randfeatsuntied',ntimes=1,plot_all=True)
-	sim.execute()
-
+	# Run sim experiment 7
+	for val in (2,4,8,16,20) : 
+		sim = SimExp('seqspace',ntimes=3,plot_all=True,seqspace=val)
+		sim.execute()	
 

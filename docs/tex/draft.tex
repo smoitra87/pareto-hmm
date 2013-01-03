@@ -602,6 +602,9 @@ Clearly Eqn~\ref{eqn:clarif2} is not the same as Eqn~\ref{eqn:clarif1}. One is m
 \subsubsection{Continuous Feature Spaces}
 Currently we are unable to provide support for continuous feature spaces.  Performing inference on discrete spaces by conditioning on continuous feature spaces can be more challenging.
 
+\subsubsection{Side chain placement}
+We can use this for side chain placement by increasing the seq space of a particular amino acid to include rotameric energies. The node and edge potentials can encode energies for side chain placement.
+
 
 \section{Conclusion}
 We presented a method that is able to perform fast decoding and inference for finding minimum energy sequences for the purpose of protein design. We also show to find the pareto-frontier for the sequence space. The key idea behind this method is the use of Tree MRFs which allow fast Dynamic Programming for max-decoding.

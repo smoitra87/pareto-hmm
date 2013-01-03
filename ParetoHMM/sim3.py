@@ -54,7 +54,20 @@ class SimExp(object) :
 		'featspacelen' : self.featspacelen
 		}	
 		namemap[self.name]()
-		with open('data/sim'+str(STUDY)+'_'+self.name+'.pkl','w') as \
+		if self.name == 'seqspace' : 
+			fname = 'data/sim'+str(STUDY)+'_'+self.name+'_'+\
+				str(self.kwdargs['seqspace'])+'.pkl'
+		elif  self.name == 'seqlen' : 
+			fname = 'data/sim'+str(STUDY)+'_'+self.name+'_'+\
+				str(self.kwdargs['seqlen'])+'.pkl'
+		elif  self.name == 'seqspacelen' : 
+			fname = 'data/sim'+str(STUDY)+'_'+self.name+'_'+\
+				'_'+str(self.kwdargs['seqspace'])+\
+				'_'+str(self.kwdargs['seqlen'])+'.pkl'
+		else :
+			fname = 'data/sim'+str(STUDY)+'_'+self.name+'.pkl'
+
+		with open(fname,'w') as \
 			pklout : 
 			pickle.dump(self,pklout)
 
@@ -322,7 +335,6 @@ class SimExp(object) :
 	def seqspace(self) :
 		""" Vary sequence space """
 		self.tasklist = []
-		feats = self.get_feats_standard()
 		featspace = 3
 		seqlen = 12
 		dims = [(self.kwdargs['seqspace'],featspace)]*seqlen
@@ -337,28 +349,86 @@ class SimExp(object) :
 				str(self.kwdargs['seqspace'])+\
 				'_'+str(taskid),cmrf,feats)				
 			# Run Brute force to enumerate the frontier
-			with benchmark(task.name+'brute') as t:
-				seq,energies = self.bruteforce(cmrf,feats)			
-			task.all_seq = seq
-			task.all_seq_energy = energies
-			task.brute_time = t.elapsed			
+			if self.kwdargs['run_brute'] : 
+				with benchmark(task.name+'brute') as t:
+					seq,energies = self.bruteforce(cmrf,feats)			
+				task.all_seq = seq
+				task.all_seq_energy = energies
+				task.brute_time = t.elapsed			
 
 			# Now run the toy simulation`
 			with benchmark(task.name+'pareto') as t : 
 				task.frontier,task.frontier_energy = \
 					pareto_frontier(cmrf,feats)		
 			if self.plot_all :
-				task.plot_frontier()
+				task.plot_frontier(frontier_only=True)
 			task.pareto_time = t.elapsed
 			self.tasklist.append(task)	
 
 	def seqlen(self) : 
 		""" Vary sequence length"""
-		pass
+		self.tasklist = []
+		featspace = 3
+		seqspace = 20
+		seqlen = self.kwdargs['seqlen']	
+		dims = [(seqspace,featspace)]*seqlen
 
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_generic(hmm,seqlen,dims)
+			cmrf = CMRF(hmm)	
+			feats = self._gen_feats_generic(seqlen,featspace)
+			task = Task('sim'+STUDY+'_'+self.name+'_'+\
+				str(seqlen)+'_'+str(taskid),cmrf,feats)				
+			# Run Brute force to enumerate the frontier
+			if self.kwdargs['run_brute'] : 
+				with benchmark(task.name+'brute') as t:
+					seq,energies = self.bruteforce(cmrf,feats)			
+				task.all_seq = seq
+				task.all_seq_energy = energies
+				task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier(frontier_only=True)
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
 	def seqspacelen(self)  :
 		""" Vary sequence space and length"""
-		pass
+		self.tasklist = []
+		featspace = 3
+		seqspace = self.kwdargs['seqspace']
+		seqlen = self.kwdargs['seqlen']	
+		dims = [(seqspace,featspace)]*seqlen
+
+		# Repeat for all the tasks described	
+		for taskid in range(self.ntimes) :	
+			hmm = HMM()
+			self._set_params_generic(hmm,seqlen,dims)
+			cmrf = CMRF(hmm)	
+			feats = self._gen_feats_generic(seqlen,featspace)
+			task = Task('sim'+STUDY+'_'+self.name+'_'+\
+				str(seqlen)+'_'+str(seqspace)+'_'+str(taskid),cmrf,feats)				
+			# Run Brute force to enumerate the frontier
+			if self.kwdargs['run_brute'] : 
+				with benchmark(task.name+'brute') as t:
+					seq,energies = self.bruteforce(cmrf,feats)			
+				task.all_seq = seq
+				task.all_seq_energy = energies
+				task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier(frontier_only=True)
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
 
 	def featspace(self) :	
 		""" Vary the feature space"""
@@ -434,13 +504,13 @@ class Task(object) :
 	
 	def plot_frontier(self,frontier_only=False) :
 		""" Plot the frontier"""
-		ll_list1,ll_list2 = zip(*self.all_seq_energy)
 		frontier = self.frontier
 		frontier_energy = self.frontier_energy
 		feat1,feat2 = self.feats	
 	
 		pl.figure()
 		if not frontier_only :	
+			ll_list1,ll_list2 = zip(*self.all_seq_energy)
 			pl.plot(ll_list1,ll_list2,'b*')
 		pl.plot(*zip(*sorted(frontier_energy)),color='magenta',\
 			marker='*',	linestyle='dashed')
@@ -502,8 +572,23 @@ if __name__ == '__main__' :
 #	sim = SimExp('randfeatsuntied',ntimes=1,plot_all=True)
 #	sim.execute()
 
-	# Run sim experiment 7
-	for val in (2,4,8,16,20) : 
-		sim = SimExp('seqspace',ntimes=3,plot_all=True,seqspace=val)
-		sim.execute()	
+#	# Run sim experiment 7
+#	for val in (2,4,8,16,20) : 
+#		sim = SimExp('seqspace',ntimes=3,plot_all=True,seqspace=val,\
+#			run_brute=False)
+#		sim.execute()	
+
+#	# Run sim experiment 8
+#	for val in (4,16,32,64,128,256,512,1024,4096) : 
+#		sim = SimExp('seqlen',ntimes=3,plot_all=True,seqlen=val,\
+#			run_brute=False)
+#		sim.execute()	
+#	
+	# Run sim experiment 9
+	for l in (4,16,32,64,128) :
+		for s in (2,4,8,16) : 
+			sim = SimExp('seqspacelen',ntimes=2,plot_all=True,seqlen=l,\
+				seqspace=s,run_brute=False)
+			sim.execute()	
+		
 

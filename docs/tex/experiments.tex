@@ -142,18 +142,103 @@ Like~\ref{sim:randprobstied} but the feature space is random
 \subsubsection{Simulation Experiment 6 :  Random feature space untied}
 Like~\ref{sim:randprobsuntied} but the feature space is random
 \label{sim:randfeatsuntied}
+sim3_toy_0brute : 0.907 seconds
+sim3_toy_0pareto : 0.003 seconds
+sim3_randprobs_0brute : 0.986 seconds
+sim3_randprobs_0pareto : 0.006 seconds
+sim3_randprobstied_0brute : 0.912 seconds
+sim3_randprobstied_0pareto : 0.004 seconds
+sim3_randprobsuntied_0brute : 0.903 seconds
+sim3_randprobsuntied_0pareto : 0.004 seconds
+sim3_randfeatstied_0brute : 0.921 seconds
+sim3_randfeatstied_0pareto : 0.011 seconds
+sim3_randfeatsuntied_0brute : 0.910 seconds
+sim3_randfeatsuntied_0pareto : 0.006 seconds
+
+
 
 \subsubsection{Simulation Experiment 7: Vary Seq space }
 \label{sim:seqspace}
 Increase the sequence space using random untied feature space as in ~\ref{sim:randfeatsuntied}. Will supply different seq space values. 2,4,16,20 are the values that are goint to be used.
+sim3_seqspace_2_0pareto : 0.017 seconds
+sim3_seqspace_2_1pareto : 0.005 seconds
+sim3_seqspace_2_2pareto : 0.007 seconds
+sim3_seqspace_4_0pareto : 0.022 seconds
+sim3_seqspace_4_1pareto : 0.021 seconds
+sim3_seqspace_4_2pareto : 0.015 seconds
+sim3_seqspace_8_0pareto : 0.040 seconds
+sim3_seqspace_8_1pareto : 0.069 seconds
+sim3_seqspace_8_2pareto : 0.061 seconds
+sim3_seqspace_16_0pareto : 0.338 seconds
+sim3_seqspace_16_1pareto : 0.213 seconds
+sim3_seqspace_16_2pareto : 0.214 seconds
+sim3_seqspace_20_0pareto : 0.370 seconds
+sim3_seqspace_20_1pareto : 0.463 seconds
+sim3_seqspace_20_2pareto : 0.284 seconds
 
 \subsubsection{Simulation Experiment 8: Seq space 20, Vary seq length}
 \label{sim:seqlen}
 Set the sequence space to be 20 and vary the sequence length from 2^2,2^16
+sim3_seqlen_4_0pareto : 0.047 seconds
+sim3_seqlen_4_1pareto : 0.011 seconds
+sim3_seqlen_4_2pareto : 0.029 seconds
+sim3_seqlen_16_0pareto : 0.621 seconds
+sim3_seqlen_16_1pareto : 0.857 seconds
+sim3_seqlen_16_2pareto : 0.499 seconds
+sim3_seqlen_32_0pareto : 2.343 seconds
+sim3_seqlen_32_1pareto : 2.344 seconds
+sim3_seqlen_32_2pareto : 2.409 seconds
+sim3_seqlen_64_0pareto : 8.683 seconds
+sim3_seqlen_64_1pareto : 10.716 seconds
+sim3_seqlen_64_2pareto : 11.068 seconds
+sim3_seqlen_128_0pareto : 39.451 seconds
+sim3_seqlen_128_1pareto : 40.050 seconds
+sim3_seqlen_128_2pareto : 33.411 seconds
+
 
 \subsubsection{Simulation Experiment 9 : Jointly vary seq space and length}
 \label{sim:seqspacelen}
 Jointly vary the sequence space and sequence length, 
+sim3_seqspacelen_4_2_0pareto : 0.001 seconds
+sim3_seqspacelen_4_2_1pareto : 0.001 seconds
+sim3_seqspacelen_4_4_0pareto : 0.000 seconds
+sim3_seqspacelen_4_4_1pareto : 0.004 seconds
+sim3_seqspacelen_4_8_0pareto : 0.010 seconds
+sim3_seqspacelen_4_8_1pareto : 0.003 seconds
+sim3_seqspacelen_4_16_0pareto : 0.032 seconds
+sim3_seqspacelen_4_16_1pareto : 0.014 seconds
+sim3_seqspacelen_16_2_0pareto : 0.019 seconds
+sim3_seqspacelen_16_2_1pareto : 0.017 seconds
+sim3_seqspacelen_16_4_0pareto : 0.040 seconds
+sim3_seqspacelen_16_4_1pareto : 0.039 seconds
+sim3_seqspacelen_16_8_0pareto : 0.144 seconds
+sim3_seqspacelen_16_8_1pareto : 0.102 seconds
+sim3_seqspacelen_16_16_0pareto : 0.375 seconds
+sim3_seqspacelen_16_16_1pareto : 0.398 seconds
+sim3_seqspacelen_32_2_0pareto : 0.012 seconds
+sim3_seqspacelen_32_2_1pareto : 0.044 seconds
+sim3_seqspacelen_32_4_0pareto : 0.109 seconds
+sim3_seqspacelen_32_4_1pareto : 0.156 seconds
+sim3_seqspacelen_32_8_0pareto : 0.290 seconds
+sim3_seqspacelen_32_8_1pareto : 0.389 seconds
+sim3_seqspacelen_32_16_0pareto : 1.166 seconds
+sim3_seqspacelen_32_16_1pareto : 1.821 seconds
+sim3_seqspacelen_64_2_0pareto : 0.195 seconds
+sim3_seqspacelen_64_2_1pareto : 0.191 seconds
+sim3_seqspacelen_64_4_0pareto : 0.567 seconds
+sim3_seqspacelen_64_4_1pareto : 0.458 seconds
+sim3_seqspacelen_64_8_0pareto : 1.594 seconds
+sim3_seqspacelen_64_8_1pareto : 1.679 seconds
+sim3_seqspacelen_64_16_0pareto : 7.087 seconds
+sim3_seqspacelen_64_16_1pareto : 5.645 seconds
+sim3_seqspacelen_128_2_0pareto : 0.713 seconds
+sim3_seqspacelen_128_2_1pareto : 0.670 seconds
+sim3_seqspacelen_128_4_0pareto : 2.135 seconds
+sim3_seqspacelen_128_4_1pareto : 2.418 seconds
+sim3_seqspacelen_128_8_0pareto : 6.247 seconds
+sim3_seqspacelen_128_8_1pareto : 6.642 seconds
+sim3_seqspacelen_128_16_0pareto : 23.922 seconds
+sim3_seqspacelen_128_16_1pareto : 24.432 seconds
 
 \subsubsection{Simulation Experiment 10: Vary Feat space }
 \label{sim:featspace}

@@ -136,30 +136,33 @@ In this experiment we use a 12 length sequence. We do 2-state design using featu
 Same as Simulation~\ref{sim:randprobstied} with the difference that the emission and the transition probabilities are untied. 
 
 \subsubsection{Simulation Experiment 5 : Random feature space tied}
-Like~\ref{sim:randprobstied} but the feature space is random
+Like~\ref{sim:randprobstied} but the feature space is randomized while the parameters between differnent amino acids are tied together. 
 \label{sim:randfeatstied}
 
 \subsubsection{Simulation Experiment 6 :  Random feature space untied}
-Like~\ref{sim:randprobsuntied} but the feature space is random
+Like~\ref{sim:randprobsuntied} but the feature space is randomized while the different amino acids are untied. This is the most general of the previous settings. 
 \label{sim:randfeatsuntied}
-sim3_toy_0brute : 0.907 seconds
-sim3_toy_0pareto : 0.003 seconds
-sim3_randprobs_0brute : 0.986 seconds
-sim3_randprobs_0pareto : 0.006 seconds
-sim3_randprobstied_0brute : 0.912 seconds
-sim3_randprobstied_0pareto : 0.004 seconds
-sim3_randprobsuntied_0brute : 0.903 seconds
-sim3_randprobsuntied_0pareto : 0.004 seconds
-sim3_randfeatstied_0brute : 0.921 seconds
-sim3_randfeatstied_0pareto : 0.011 seconds
-sim3_randfeatsuntied_0brute : 0.910 seconds
-sim3_randfeatsuntied_0pareto : 0.006 seconds
 
+
+\begin{center}
+    \begin{tabular}{| c | c | c | c |}
+    \hline
+    Experiment & Brute & Pareto \\ \hline
+    Sim~\ref{sim:toy} & 0.907 & 0.003 \\ \hline
+    Sim~\ref{sim:randprobs} & 0.986 & 0.006 \\ \hline
+    Sim~\ref{sim:randprobstied} & 0.912 & 0.004 \\ \hline
+    Sim~\ref{sim:randprobsuntied} & 0.903 & 0.0034\\ \hline
+    Sim~\ref{sim:randfeatstied} & 0.921 & 0.011 \\ \hline
+    Sim~\ref{sim:randfeatsuntied} & 0.910 & 0.006 \\ \hline
+    \hline
+    \end{tabular}
+\end{center}
 
 
 \subsubsection{Simulation Experiment 7: Vary Seq space }
 \label{sim:seqspace}
 Increase the sequence space using random untied feature space as in ~\ref{sim:randfeatsuntied}. Will supply different seq space values. 2,4,16,20 are the values that are goint to be used.
+\begin{verbatim}
 sim3_seqspace_2_0pareto : 0.017 seconds
 sim3_seqspace_2_1pareto : 0.005 seconds
 sim3_seqspace_2_2pareto : 0.007 seconds
@@ -175,10 +178,13 @@ sim3_seqspace_16_2pareto : 0.214 seconds
 sim3_seqspace_20_0pareto : 0.370 seconds
 sim3_seqspace_20_1pareto : 0.463 seconds
 sim3_seqspace_20_2pareto : 0.284 seconds
+\end{verbatim}
+
 
 \subsubsection{Simulation Experiment 8: Seq space 20, Vary seq length}
 \label{sim:seqlen}
-Set the sequence space to be 20 and vary the sequence length from 2^2,2^16
+Set the sequence space to be 20 and vary the sequence length from $2^2$  to $2^7$
+\begin{verbatim}
 sim3_seqlen_4_0pareto : 0.047 seconds
 sim3_seqlen_4_1pareto : 0.011 seconds
 sim3_seqlen_4_2pareto : 0.029 seconds
@@ -194,11 +200,13 @@ sim3_seqlen_64_2pareto : 11.068 seconds
 sim3_seqlen_128_0pareto : 39.451 seconds
 sim3_seqlen_128_1pareto : 40.050 seconds
 sim3_seqlen_128_2pareto : 33.411 seconds
-
+\end{verbatim}
+%
 
 \subsubsection{Simulation Experiment 9 : Jointly vary seq space and length}
 \label{sim:seqspacelen}
 Jointly vary the sequence space and sequence length, 
+\begin{verbatim}
 sim3_seqspacelen_4_2_0pareto : 0.001 seconds
 sim3_seqspacelen_4_2_1pareto : 0.001 seconds
 sim3_seqspacelen_4_4_0pareto : 0.000 seconds
@@ -239,11 +247,13 @@ sim3_seqspacelen_128_8_0pareto : 6.247 seconds
 sim3_seqspacelen_128_8_1pareto : 6.642 seconds
 sim3_seqspacelen_128_16_0pareto : 23.922 seconds
 sim3_seqspacelen_128_16_1pareto : 24.432 seconds
+\end{verbatim}
 
 \subsubsection{Simulation Experiment 10: Vary Feat space }
 \label{sim:featspace}
 Keeping the seq space at 20 and seq len at 16. vary feat space from 5-10-25-50
 
+\begin{verbatim}
 sim3_featspace_5_0pareto : 0.344 seconds
 sim3_featspace_5_1pareto : 0.426 seconds
 sim3_featspace_5_2pareto : 0.499 seconds
@@ -256,11 +266,13 @@ sim3_featspace_25_2pareto : 0.536 seconds
 sim3_featspace_50_0pareto : 0.543 seconds
 sim3_featspace_50_1pareto : 0.676 seconds
 sim3_featspace_50_2pareto : 0.586 seconds
-
+\end{verbatim}
 
 \subsubsection{Simulation Experiment 11: Vary Feat space and sequence length}
 \label{sim:featspacelen}
 Keeping the seq space at 20, vary feat space from 5-10-25-50, sequence length from seqlen to 64.
+
+\begin{verbatim}
 sim3_featspacelen_4_5_0pareto : 0.030 seconds
 sim3_featspacelen_4_5_1pareto : 0.037 seconds
 sim3_featspacelen_4_10_0pareto : 0.046 seconds
@@ -293,7 +305,8 @@ sim3_featspacelen_64_25_0pareto : 10.321 seconds
 sim3_featspacelen_64_25_1pareto : 9.168 seconds
 sim3_featspacelen_64_50_0pareto : 9.095 seconds
 sim3_featspacelen_64_50_1pareto : 8.893 seconds
-
+\end{verbatim}
+%
 \subsubsection{Simulation Experiment : K-way multistate design}
 
 \subsection{Simulation Experiment 11 : Augmenting Feature space}

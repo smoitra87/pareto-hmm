@@ -1,3 +1,20 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{amsmath,amssymb,amsthm}
+%\usepackage[square]{natbib}
+\usepackage{color}
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\usepackage{multirow}
+\usepackage{color}
+\usepackage[usenames,dvipsnames,svgnames,table]{xcolor}
+
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+\begin{document}
+
 \section{Experiments}
 In this section we evaluate the performance of our algorithm on simulated as well as experimental data. 
 
@@ -309,10 +326,37 @@ sim3_featspacelen_64_50_1pareto : 8.893 seconds
 %
 \subsubsection{Simulation Experiment : K-way multistate design}
 
-\subsection{Simulation Experiment 11 : Augmenting Feature space}
+\subsubsection{Simulation Experiment 11 : Augmenting Feature space}
 
 \subsection{Benchmarking with other Methods}
 
 \subsection{Experiments on Biological Data}
+In this section we apply our algorithm to biological sequence data. These are the following main steps required : 
+
+\begin{itemize}
+\item Create alignments of sequences 
+\item Train HMM from the alignment
+\item Convert HMM representation to CMRF
+\item Choose design state and corresponding features
+\item Run algorithm to decode sequence
+\end{itemize}
+
+\subsubsection{Tied Params - Multistate proteins}
 
 
+
+\subsubsection{Profile HMM- Multistate proteins}
+
+\subsubsection{Tied Params - Disordered proteins}
+
+
+
+
+
+
+
+\bibliographystyle{plain}
+\bibliography{refs}
+
+
+\end{document}

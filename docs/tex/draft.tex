@@ -605,6 +605,22 @@ Currently we are unable to provide support for continuous feature spaces.  Perfo
 \subsubsection{Side chain placement}
 We can use this for side chain placement by increasing the seq space of a particular amino acid to include rotameric energies. The node and edge potentials can encode energies for side chain placement.
 
+\subsection{Exploring Concavities }
+There might occur situations where the protein sequence lies in the concavities of the sequence space and is not strictly dominated. Strict domination means that the energies lie in the upper right block of all points of the points on the frontier. Figure~\ref{fig:cvxfront3} illustrates the point that there might be points in the interior of the convex frontier found by the algorithm that are not strictly dominated. P1 and P2 are on the convex frontier and the dashed magenta line is the convex hull. Any point in D1 is strictly dominated by P1 and any point in D2 is strictly dominated by P2. Therefore the points P3 and P4 are dominated by P1 and P2. The point P5 on the other hand is not dominated by P1 or P2 and yet is not explored by the algorithm. It does not lie on the convex frontier but it may lie on the pareto frontier. This is because P5 lies in the concavities of the sequence space. There is a way to explore the concavities of the sequence space if so desired. 
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/convexfront3.pdf}
+    \caption{This figure illustrates the point that there might be points in the interior of the convex frontier found by the algorithm that are not strictly dominated. P1 and P2 are on the convex frontier and the dashed magenta line is the convex hull. Any point in D1 is strictly dominated by P1 and any point in D2 is strictly dominated by P2. Therefore the points P3 and P4 are dominated by P1 and P2. The point P5 on the other hand is not dominated by P1 or P2 and yet is not explored by the algorithm. It does not lie on the convex frontier but it may lie on the pareto frontier. This is because P5 lies in the concavities of the sequence space.}
+    \label{fig:cvxfront3}
+\end{figure}
+\pagebreak
+
+
+
+
+
 
 \section{Conclusion}
 We presented a method that is able to perform fast decoding and inference for finding minimum energy sequences for the purpose of protein design. We also show to find the pareto-frontier for the sequence space. The key idea behind this method is the use of Tree MRFs which allow fast Dynamic Programming for max-decoding.

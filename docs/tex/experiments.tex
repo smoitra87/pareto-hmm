@@ -341,19 +341,39 @@ In this section we apply our algorithm to biological sequence data. These are th
 \item Run algorithm to decode sequence
 \end{itemize}
 
-\subsubsection{Tied Params - Multistate proteins}
+There can be a number of different schemes that can be used for running biological experiments. 
+
+\paragraph{Tied - SCOP} This scheme is the simplest of all. Try to find a number of proteins that belong to a particular protein fold. There should be sequence and structure information available for all these structures. Find the transition probabilities of these sequences and the corresponding sec. structure features. Use these to learn $P(X)$ and $P(X1|X2)$ and $P(O|X)$ that are tied for all amino acid positions. Find the 3D features of the states you are interested in designing. Could be the two states of Zif268 and Trimeric or Janus series or disordered proteins. 
+
+\paragraph{Seq untied, features tied - PFAM/SCOP} -Similar to previous scheme but with sequence weights untied. We obtain PFAM alignments for the states in questions. Combine the alignments. Learn P(X) and P(X1|Xj). P(O|X) is learned from a general SCOP superfamily. Find 3D features of all positions you are interested in. Make sure that gaps and dummy features are handled carefully. Decode on a possibly larger HMM than the sequence desired because the MSA is bigger. 
+
+\paragraph{Seq untied, features partially untied - PFAM/SCOP} - An effort is made to untie 3D features. Instead of having a uniform $P(O|X)$ for all sequence positions. Whichever sequences in alignment have 3D information, those sequences then bias $P(O|X)$ for that position. 
+
+\paragraph{Seq, features untied - PDB Blast} - All sequence positions are untied. PDB is blasted to find all sequences that match given region of interest. 
+
+\paragraph{No Joint alignment} - Have different alignments for the different states and learn separate HMMs for each of these. The algorithm needs to be modified in order to perform decoding on these. 
+
+\paragraph{Augment Feature space discrete features} - Augment the feature space with other discrete features. 
+
+\paragraph{Augment feature space real features }  - Augment feature space with real valued features. Condition on them using Bayes theorem and some a distribution such as the gaussian. 
+
+\subsubsection{Tied SCOP - Disordered proteins}
+\label{exp:tied_scop_disordered}
+The goal is to be able to find where known disordered proteins lie on the sequence space defined by the family of disordered proteins. To do this we first obtain sequences corresponding to the family of disordered   proteins probably from SCOP. The sequences are examined to learn transition probabilities and begin probabilities. The pdb structures are examined to find the amino acid to secondary structure counts. The Emission and transition tables are filled in. 
+
+There is no concept of gaps here. It is possible that different sequence lengths correspond to different energy values, sop the scores must be normalized to the length of the target design sequences. The decoding is performed and sequences are examined with respect to the pareto-frontier. 
 
 
+\subsubsection{Untied SCOP Partial - Disordered proteins}
+\label{exp:untied_scop_disordered}
+The goal here is the same as in section~\ref{exp:tied_scop_disordered}. However we will do away with the concept of tied position independent hmms. Instead we will create a giant alignment of all PFAM/SCOP sequences corresponding to these fellows. We will use background frequencies of amino acids and features and use them as pseudo-counts. Those sequences that have pdb structures will be used to bias the emission probability weights where suitable. There will be a lot of aligning and re-aligning going on. So it will help to make sure that all this is taken care off properly.
 
-\subsubsection{Profile HMM- Multistate proteins}
-
-\subsubsection{Tied Params - Disordered proteins}
-
-
-
+\subsubsection{Tied SCOP - Multistate proteins}
 
 
+\subsubsection{Untied SCOP partial- Multistate proteins}
 
+\subsection{Untied PDB Blast - Multistate proteins}
 
 \bibliographystyle{plain}
 \bibliography{refs}

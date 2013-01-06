@@ -11,6 +11,7 @@ import pylab as pl
 import scipy as sci
 import subprocess
 import re
+from operator import itemgetter
 
 # Constants
 pdb_ss_fpath = 'data/ss_dis.txt'
@@ -118,6 +119,18 @@ if __name__ == '__main__' :
 	scop_1htm = parse_scop_csv('data/1htm_scop.csv')
 	scop_1aay = parse_scop_csv('data/1aay_scop.csv')	
 
+ 	# Remove duplicate sequence and structures and store that \
+	#as the alignment
+	nondup_1htm = set(zip(scop_1htm['seq'],scop_1htm['sec']))
+	nondup_1aay = set(zip(scop_1htm['seq'],scop_1htm['sec']))
 
-	
-	
+	# Get sequences and ss for each of the
+	data = {}
+	data['1htm'] = {}
+	data['1aay'] = {}
+	data['1htm']['seq'] = map(itemgetter(0),nondup_1htm)
+	data['1aay']['seq'] = map(itemgetter(0),nondup_1aay)
+	data['1htm']['ss'] = map(itemgetter(1),nondup_1htm)
+	data['1aay']['ss'] = map(itemgetter(1),nondup_1aay)
+
+

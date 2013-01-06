@@ -390,7 +390,10 @@ There is no concept of gaps here. It is possible that different sequence lengths
 The goal here is the same as in section~\ref{exp:tied_scop_disordered}. However we will do away with the concept of tied position independent hmms. Instead we will create a giant alignment of all PFAM/SCOP sequences corresponding to these fellows. We will use background frequencies of amino acids and features and use them as pseudo-counts. Those sequences that have pdb structures will be used to bias the emission probability weights where suitable. There will be a lot of aligning and re-aligning going on. So it will help to make sure that all this is taken care off properly.
 
 We use all the sequences and secondary structures of SCOP fold of the protein under consideration. For 1HTM it is the 'Stalk segment of viral fusion proteins' fold. For 1AAY it is 'beta-beta-alpha zinc fingers' fold. 
-
+While training the HMM we deduplicate all sequence, sec. structure pairs. All X and U amino acids are not considered. We add a 5\% bias to all background to match background frequencies. This is done by : 
+\[
+P(O=a|X=b) = \frac{Count(O=a,X=b)+Count(O=a)\times 0.05}{Count(X=b)+Count(O)\times 0.05}
+\]
 
 
 \subsubsection{Untied SCOP partial- Multistate proteins}

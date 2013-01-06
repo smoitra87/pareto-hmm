@@ -12,6 +12,10 @@ import scipy as sci
 import subprocess
 import re
 from operator import itemgetter
+from itertools import product
+from HMM import HMM,CMRF, TMRF, reverse_dict
+import random,time, pickle
+from cvxhull import pareto_frontier
 
 # Constants
 pdb_ss_fpath = 'data/ss_dis.txt'
@@ -20,7 +24,12 @@ pdb_scop_1htm_fpath = 'data/1htm_scop.list'
 pdb_scop_1aaw_fpath = 'data/1aaw_dom_scop.list'
 
 SEEK_BUFF = 100
+DSSP_SYM = ('H','B','E','G','I','T','S','L')
+SEQ_SYM='ACDEFGHIKLMNPQRSTVWY'
+BIAS=0.05
+IGNORE_AA = 'XU'
 
+STUDY=1
 
 def build_tied_hmm(self,align_fpath,feats) :
 	""" Build a HMM using data from an alignment """
@@ -113,27 +122,267 @@ def calc_base(data)  :
 	scop_classes = data.keys()
 
 	counts = {}
+	counts['all'] = {}
+	counts['all']['seq'] = {}
+	counts['all']['ss'] = {}
 	# Count the freqs
 	for c in scop_classes : 
 		cseq = data[c]['seq']
 		css = data[c]['ss']
 		counts_seq = {}
 		counts_ss = {}
-		for seq in cseq : 
-			for aa in seq : 
+		for seq,ss in zip(cseq,css) : 
+			for aa,ss_aa in zip(seq,ss) : 
+				if aa in IGNORE_AA : 
+					continue
 				counts_seq[aa] = counts_seq.get(aa,0)+1
-		for seq in css : 
-			for aa in seq : 
-				counts_ss[aa] = counts_ss.get(aa,0)+1
+				counts_ss[ss_aa] = counts_ss.get(aa,0)+1
 		counts[c] = {}
 		counts[c]['seq'] = counts_seq
 		counts[c]['ss'] = counts_ss
+		for k in counts[c]['seq'].keys() : 
+			counts['all']['seq'][k] =  counts['all']['seq'].get(k,0) +\
+				counts[c]['seq'][k]	
+
+		for k in counts[c]['ss'].keys() :
+			counts['all']['ss'][k] =  counts['all']['ss'].get(k,0) +\
+				counts[c]['ss'][k]	
 
 	return counts
 	
+def learn_weights_combined(data,base_data) :
+	""" Learn the emission weights by combining all data """
+
+	weights = {}
+
+	classes = data.keys()
+	emission = {}
+	trans = {}
+
+	for aa in SEQ_SYM : 
+		emission[aa] = {}
+		for ss_aa in DSSP_SYM : 
+			emission[aa][ss_aa] = 0
+	for aa in SEQ_SYM: 
+		trans[aa] = {}
+		for aa2 in SEQ_SYM : 
+			trans[aa][aa2] = 0
+	count=0	
+
+	# Learn the emission weights
+	for c in classes : 
+		cseq =  data[c]['seq'] 
+		css  = data[c]['ss']
+		for seq,ss in zip(cseq,css) :
+			for aa,ss_aa in zip(seq,ss) : 
+				if aa in IGNORE_AA : 
+					continue
+				try : 
+					emission[aa][ss_aa] = emission[aa].get(ss_aa,0)+1
+				except KeyError : 
+					emission[aa] = {}
+					emission[aa][ss_aa] = emission[aa].get(ss_aa,0)+1
+	for key in emission.keys() : 
+		count = sum(emission[key].values())
+		count_ss = sum(base_data['all']['ss'].values())
+		for key2 in emission[key].keys() : 
+			emission[key][key2] = \
+				(emission[key][key2]+BIAS*\
+				base_data['all']['ss'][key2])/(count+BIAS*count_ss)
+			# Add a 5% bias
+	weights['emit'] = emission
+
+	# Learn the transition weights
+	for c in classes : 
+		cseq =  data[c]['seq'] 
+		for seq in cseq :
+			for i in range(len(seq[:-1])) : 
+				aa1,aa2 = seq[i:i+2]
+				if aa1 in IGNORE_AA or aa2 in IGNORE_AA : 
+					continue
+				trans[aa1][aa2] += 1 
+	
+	count2 = sum(base_data['all']['seq'].values())
+	for key in trans.keys() : 
+		count = sum(trans[key].values())
+		for key2 in trans[key].keys() : 
+			trans[key][key2] = \
+				(trans[key][key2]+BIAS*\
+				base_data['all']['seq'][key2])/(count+BIAS*count2)
+	
+	initprob = {}
+	for k in base_data['all']['seq'].keys()  : 
+		initprob[k] =  (base_data['all']['seq'][k]+0.0)/count2
+
+	weights['emit'] = emission
+	weights['trans'] = trans
+	weights['initprob'] = initprob
+
+	return weights		
+
+class BioExp(object) :
+	""" Helps run a number of different simulation experiments """
+	def __init__(self,name,tied=True,plot_all=False,**kwdargs)	:
+		""" Set up the simulation study according to the parameters 
+		specified"""
+		self.name = name #name of experiment
+		self.tied = tied
+		self.plot_all = plot_all
+		self.kwdargs = kwdargs
+		self.ntimes=1
+		# Set the random seed
+	
+	def execute(self)  :
+		""" Execute the stored execution function """	
+		# Set the random seed so that all experiments are pseudo random
+		random.seed(42)
+		np.random.seed(42)
+		namemap = {
+		'ziftied' : self.ziftied
+		}	
+		namemap[self.name]() # Execute ziftied
+
+		#  Write out results
+		if self.name == 'ziftied' : 
+			fname = 'data/bio'+str(STUDY)+'_'+self.name+'_'+\
+				self.name+'.pkl'
+		else :
+			fname = 'data/bio'+str(STUDY)+'_'+self.name+'.pkl'
+
+		with open(fname,'w') as pklout : 
+			pickle.dump(self,pklout)
+
+	def ziftied(self) :
+		""" Set up the toy simulation """	
+		self.tasklist = []
+		feats = self.kwdargs['feats']
+		weights = self.kwdargs['weights']
+		hmm = HMM()
+		self._set_params_ziftied(hmm)
+		cmrf = CMRF(hmm)
+		for taskid in range(self.ntimes) :	
+			task = Task('bio'+str(STUDY)+'_'+self.name+'_'+str(taskid),cmrf,\
+				feats)				
+			# Run Brute force to enumerate the frontier
+#			with benchmark(task.name+'brute') as t:
+#				seq,energies = self.bruteforce(cmrf,feats)			
+#			task.all_seq = seq
+#			task.all_seq_energy = energies
+#			task.brute_time = t.elapsed			
+
+			# Now run the toy simulation`
+			with benchmark(task.name+'pareto') as t : 
+				task.frontier,task.frontier_energy = \
+					pareto_frontier(cmrf,feats)		
+			if self.plot_all :
+				task.plot_frontier(frontier_only = True)
+			task.pareto_time = t.elapsed
+			self.tasklist.append(task)	
+	
+	def _set_params_ziftied(self,hmm) :
+		""" Sets the params of a hmm for ziftied"""
+		feats = self.kwdargs['feats']
+		weights = self.kwdargs['weights']
+		
+		hmm.length = len(feats[0])
+		hmm.dims = [(len(SEQ_SYM),len(DSSP_SYM))]*hmm.length # (latent,emit) dimspace
+		hmm.seqmap2 = [dict(enumerate(SEQ_SYM))]*hmm.length
+		hmm.seqmap = map(reverse_dict,hmm.seqmap2)
+		hmm.featmap2 = [dict(enumerate(DSSP_SYM))]*hmm.length
+		hmm.featmap = map(reverse_dict,hmm.featmap2)
+
+		hmm.emit,hmm.trans,hmm.initprob = [],[],[]
+		for aa in SEQ_SYM :	
+			hmm.emit.append([weights['emit'][aa][ss_aa] \
+				for ss_aa in DSSP_SYM])
+			hmm.trans.append([weights['trans'][aa][aa2] \
+				for aa2 in SEQ_SYM])
+			hmm.initprob.append(weights['initprob'][aa])
+
+		hmm.emit = [hmm.emit]*hmm.length
+		hmm.trans = [hmm.trans]*hmm.length
+		hmm.trained = True
+
+	def gen_random_dist(self,size) : 
+		x = np.random.uniform(size=size)
+		x = x/sum(x)
+		return x
+
+	def bruteforce(self,cmrf,feats)  :
+		""" Run Brute force enumeration of the sequence space """
+		feat1,feat2 = feats
+		ll_list1,ll_list2 = [],[]
+		seqdim = cmrf.dims[0][0]	
+		seqspace ='ACDEFGHIKLMNPQRSTVWY'[:seqdim].lower()
+		seq_list = ["".join(s) for s in product(seqspace,repeat=12)]
+		for seq in seq_list:	
+			ll_list1.append(cmrf.score(seq,feat1))
+			ll_list2.append(cmrf.score(seq,feat2))
+
+		return seq_list,zip(ll_list1,ll_list2)
+	
+
+	def mcmc(self) : 
+		""" Run mcmc on the same problem instance """
+		### TODO
+		pass
+
+
+class Task(object) :
+	""" Stores the result object and other tracking features"""
+	def __init__(self,name,hmm,feats) :
+		self.hmm = hmm
+		self.name = name
+		self.frontier = None
+		self.frontier_energy = None
+		self.all_seq = None
+		self.all_seq_energy = None
+		self.feats = feats
+	
+	def plot_frontier(self,frontier_only=False) :
+		""" Plot the frontier"""
+		frontier = self.frontier
+		frontier_energy = self.frontier_energy
+		feat1,feat2 = self.feats	
+	
+		pl.figure()
+		if not frontier_only :	
+			ll_list1,ll_list2 = zip(*self.all_seq_energy)
+			pl.plot(ll_list1,ll_list2,'b*')
+		pl.plot(*zip(*sorted(frontier_energy)),color='magenta',\
+			marker='*',	linestyle='dashed')
+		ctr = dict(zip(set(frontier_energy),[0]*
+			len(set(frontier_energy))))
+		for i,e in enumerate(frontier_energy) : 
+			ctr[e] += 1
+			pl.text(e[0],e[1]+0.1*ctr[e],str(i),fontsize=10)
+			pl.text(e[0]+0.1,e[1]+0.1*ctr[e],frontier[i],fontsize=9)	
+		pl.xlabel('Energy:'+feat1)
+		pl.ylabel('Energy:'+feat2)
+		pl.title('Energy Plot')
+		xmin,xmax = pl.xlim()
+		ymin,ymax = pl.ylim()
+		pl.xlim(xmin,xmax)
+		pl.ylim(ymin,ymax)
+		pic_dir = '../docs/tex/pics/'
+		pl.savefig(pic_dir+self.name+'.pdf')
+		pl.savefig(pic_dir+self.name+'.png')
+
+class benchmark(object):
+	def __init__(self,name):
+		self.name = name
+	def __enter__(self):
+		self.start = time.time()
+		return self
+	def __exit__(self,ty,val,tb):
+		end = time.time()
+		self.elapsed =  end-self.start
+		print("%s : %0.3f seconds" % (self.name, end-self.start))
+
+
 if __name__ == '__main__' : 
 	# Create features
-	p1 = Protein('1HTM',[(13,44)])	
+	p1 = Protein('1HTM',[(13,43)])	
 	p2 = Protein('1AAY',[(3,33)])
 
 	# Read 1htm scop file
@@ -143,7 +392,7 @@ if __name__ == '__main__' :
  	# Remove duplicate sequence and structures and store that \
 	#as the alignment
 	nondup_1htm = set(zip(scop_1htm['seq'],scop_1htm['sec']))
-	nondup_1aay = set(zip(scop_1htm['seq'],scop_1htm['sec']))
+	nondup_1aay = set(zip(scop_1aay['seq'],scop_1aay['sec']))
 
 	# Get sequences and ss for each of the
 	data = {}
@@ -154,7 +403,22 @@ if __name__ == '__main__' :
 	data['1htm']['ss'] = map(itemgetter(1),nondup_1htm)
 	data['1aay']['ss'] = map(itemgetter(1),nondup_1aay)
 
-	# Learn the weights of the hmm
+	########## Learn the weights of the hmm #############3
+
+	# Calculate the base frequencies of the data
 	base_data = calc_base(data)
 	
+	# Learn emission weights
+	weights = learn_weights_combined(data,base_data)	
 
+	# Assert that the weights are correct
+	for k in weights.keys() : 
+		wt = weights[k]
+		if k == 'initprob' : continue
+		for k2 in wt.keys() : 
+			assert round(sum(wt[k2].values())-1.0,7) == 0.0
+
+	# Learn an HMM and run the experiments
+	sim = BioExp('ziftied',feats=[p1.des_feat,p2.des_feat],weights=weights,plot_all=True)	
+	sim.execute()	
+#

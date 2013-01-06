@@ -67,9 +67,6 @@ def extract_feats(pdbid) :
 	ss = ss.replace(' ','L')
 	return seq,ss,dis	
 
-def extract_pdb_seq(pdbid) : 
-	pass		
-
 class Protein(object) :
 	""" Describes a protein class """
 	def __init__(self,pdbid,design_range) : 
@@ -109,6 +106,30 @@ def parse_scop_csv(fpath) :
 				eval('parsed["%s"].append(%s)'%(key,key))	
 	return parsed
 
+
+def calc_base(data)  :
+	""" Calculate all the base frequencies of all chars in dataset"""
+	# Scop classes
+	scop_classes = data.keys()
+
+	counts = {}
+	# Count the freqs
+	for c in scop_classes : 
+		cseq = data[c]['seq']
+		css = data[c]['ss']
+		counts_seq = {}
+		counts_ss = {}
+		for seq in cseq : 
+			for aa in seq : 
+				counts_seq[aa] = counts_seq.get(aa,0)+1
+		for seq in css : 
+			for aa in seq : 
+				counts_ss[aa] = counts_ss.get(aa,0)+1
+		counts[c] = {}
+		counts[c]['seq'] = counts_seq
+		counts[c]['ss'] = counts_ss
+
+	return counts
 	
 if __name__ == '__main__' : 
 	# Create features
@@ -133,4 +154,7 @@ if __name__ == '__main__' :
 	data['1htm']['ss'] = map(itemgetter(1),nondup_1htm)
 	data['1aay']['ss'] = map(itemgetter(1),nondup_1aay)
 
+	# Learn the weights of the hmm
+	base_data = calc_base(data)
+	
 

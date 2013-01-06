@@ -10,9 +10,14 @@ import numpy as np
 import pylab as pl
 import scipy as sci
 import subprocess
+import re
 
 # Constants
 pdb_ss_fpath = 'data/ss_dis.txt'
+pdb_seq_fpath = 'data/pdb_seqres.txt'
+pdb_scop_1htm_fpath = 'data/1htm_scop.list'
+pdb_scop_1aaw_fpath = 'data/1aaw_dom_scop.list'
+
 SEEK_BUFF = 100
 
 
@@ -61,15 +66,58 @@ def extract_feats(pdbid) :
 	ss = ss.replace(' ','L')
 	return seq,ss,dis	
 
+def extract_pdb_seq(pdbid) : 
+	pass		
+
 class Protein(object) :
 	""" Describes a protein class """
 	def __init__(self,pdbid,design_range) : 
 		self.pdbid = pdbid
 		self.seq,self.ss,self.dis = extract_feats(pdbid)
-		self.design_range = design_range	
-		self.des_feat = self.ss[design_range[0][0]-1:design_range[0][1]]
-		self.des_seq = self.seq[design_range[0][0]-1:design_range[0][1]]
+		if design_range == 'all' : 
+			self.design_range = [(1,len(self.seq))]
+		else : 
+			self.design_range = design_range	
+		self.des_feat = self.ss[self.design_range[0][0]-1:\
+			self.design_range[0][1]]
+		self.des_seq = self.seq[self.design_range[0][0]-1:\
+			self.design_range[0][1]]
+
+def read_pdb_scop_list(fpath) : 
+	""" Read a pdb list file and return a list of pdb ids """
+	with open(fpath) as fin : 
+		pdb_list = [line.strip() for line in fin.readlines()]
+	return pdb_list
+
+def parse_scop_csv(fpath) :
+	""" Parse the scop file and return the data """
+	parsed = {'pdbid':[],'chain':[],'pfam':[],'seq':[],'sec':[]}
+	regex = re.compile(r'\"(.*?)\"')
+
+	with open(fpath) as fin : 
+		headers = fin.readline() # skip the first line
+		for line in fin.readlines() :
+			if line == '\n' :
+				continue
+			line_list = regex.findall(line.strip('\n'))
+			pdbid,chain,pfam,seqsec = line_list
+			seq,sec=seqsec.split('#')
+			sec = sec.replace(' ','L')
+			pfam_list = [p.strip() for p in pfam.split(',')]
+			for key in parsed.keys() : 
+				eval('parsed["%s"].append(%s)'%(key,key))	
+	return parsed
+
 	
 if __name__ == '__main__' : 
+	# Create features
 	p1 = Protein('1HTM',[(13,44)])	
 	p2 = Protein('1AAY',[(3,33)])
+
+	# Read 1htm scop file
+	scop_1htm = parse_scop_csv('data/1htm_scop.csv')
+	scop_1aay = parse_scop_csv('data/1aay_scop.csv')	
+
+
+	
+	

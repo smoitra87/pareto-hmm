@@ -341,6 +341,18 @@ In this section we apply our algorithm to biological sequence data. These are th
 \item Run algorithm to decode sequence
 \end{itemize}
 
+We have the following sources of information from the various databases : 
+
+\begin{itemize}
+\item pdb - pfam map
+\item pdb - scop - pdb list map
+\item pdb - sec structure map
+\item pdb - seq map
+\item pdb - pdb structure 
+\item pfam - pdb 
+\item pfam - uniprot (alignments)
+\end{itemize}
+
 There can be a number of different schemes that can be used for running biological experiments. 
 
 \paragraph{Tied - SCOP} This scheme is the simplest of all. Try to find a number of proteins that belong to a particular protein fold. There should be sequence and structure information available for all these structures. Find the transition probabilities of these sequences and the corresponding sec. structure features. Use these to learn $P(X)$ and $P(X1|X2)$ and $P(O|X)$ that are tied for all amino acid positions. Find the 3D features of the states you are interested in designing. Could be the two states of Zif268 and Trimeric or Janus series or disordered proteins. 
@@ -357,6 +369,15 @@ There can be a number of different schemes that can be used for running biologic
 
 \paragraph{Augment feature space real features }  - Augment feature space with real valued features. Condition on them using Bayes theorem and some a distribution such as the gaussian. 
 
+\subsubsection{Tied SCOP Zif268-Trimer}
+\label{exp:tied_scop_multistate}
+For multistate design we will look try to design for two states Zif268(zic-finger like) and a trimeric coiled coil. Specifically we will consider the structures of hemaglutinin(13-44) pdb id 1HTM and Zif268 zinc-finger DNA complex(pdb id: 1AAY). 1HTM belongs to the PF00509 family which has 232 structures. 1AAY belongs to PF00096 family which has 19 structures. These sets are expanded by considering the SCOP family that they belong to. 1AAY belongs to the Zif268 domain which has 14 structures and the zinc finger family which has 70 structures. 1HTM belongs to influenza hemagluttinin family and domain which have 39 structures both. In order to train the hmm, one can learn the transition and emission probabilities of the region under consideration, the whole protein. One can also choose to learn these weights from just the PFAM or just the scop data or both combined. We will explore each of these cases. 
+
+
+\subsubsection{Untied SCOP-PFAM Zif268-Trimer}
+\label{exp:untied_scop_zif}
+
+
 \subsubsection{Tied SCOP - Disordered proteins}
 \label{exp:tied_scop_disordered}
 The goal is to be able to find where known disordered proteins lie on the sequence space defined by the family of disordered proteins. To do this we first obtain sequences corresponding to the family of disordered   proteins probably from SCOP. The sequences are examined to learn transition probabilities and begin probabilities. The pdb structures are examined to find the amino acid to secondary structure counts. The Emission and transition tables are filled in. 
@@ -368,10 +389,11 @@ There is no concept of gaps here. It is possible that different sequence lengths
 \label{exp:untied_scop_disordered}
 The goal here is the same as in section~\ref{exp:tied_scop_disordered}. However we will do away with the concept of tied position independent hmms. Instead we will create a giant alignment of all PFAM/SCOP sequences corresponding to these fellows. We will use background frequencies of amino acids and features and use them as pseudo-counts. Those sequences that have pdb structures will be used to bias the emission probability weights where suitable. There will be a lot of aligning and re-aligning going on. So it will help to make sure that all this is taken care off properly.
 
-\subsubsection{Tied SCOP - Multistate proteins}
+
 
 
 \subsubsection{Untied SCOP partial- Multistate proteins}
+
 
 \subsection{Untied PDB Blast - Multistate proteins}
 

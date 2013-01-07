@@ -374,6 +374,22 @@ There can be a number of different schemes that can be used for running biologic
 For multistate design we will look try to design for two states Zif268(zic-finger like) and a trimeric coiled coil. Specifically we will consider the structures of hemaglutinin(13-44) pdb id 1HTM and Zif268 zinc-finger DNA complex(pdb id: 1AAY). 1HTM belongs to the PF00509 family which has 232 structures. 1AAY belongs to PF00096 family which has 19 structures. These sets are expanded by considering the SCOP family that they belong to. 1AAY belongs to the Zif268 domain which has 14 structures and the zinc finger family which has 70 structures. 1HTM belongs to influenza hemagluttinin family and domain which have 39 structures both. In order to train the hmm, one can learn the transition and emission probabilities of the region under consideration, the whole protein. One can also choose to learn these weights from just the PFAM or just the scop data or both combined. We will explore each of these cases. 
 
 
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.9\textwidth]{pics/bio1_ziftied_0.pdf}
+    \caption{Tied SCOP Zif268-Trimer. Basically this does not really work since all the params are tied together. It prefers repeated amino acids, which is not really what it is supposed to do. }
+    \label{fig:tied_zif}
+\end{figure}
+
+We use all the sequences and secondary structures of SCOP fold of the protein under consideration. For 1HTM it is the 'Stalk segment of viral fusion proteins' fold. For 1AAY it is 'beta-beta-alpha zinc fingers' fold. 
+While training the HMM we deduplicate all sequence, sec. structure pairs. All X and U amino acids are not considered. We add a 5\% bias to all background to match background frequencies. This is done by : 
+\[
+P(O=a|X=b) = \frac{Count(O=a,X=b)+Count(O=a)\times 0.05}{Count(X=b)+Count(O)\times 0.05}
+\]
+
+See Figure~\ref{fig:tied_zif} for results. Basically, the sequences are of poor quality since they are repeated. 
+
+
 \subsubsection{Untied SCOP-PFAM Zif268-Trimer}
 \label{exp:untied_scop_zif}
 
@@ -389,11 +405,6 @@ There is no concept of gaps here. It is possible that different sequence lengths
 \label{exp:untied_scop_disordered}
 The goal here is the same as in section~\ref{exp:tied_scop_disordered}. However we will do away with the concept of tied position independent hmms. Instead we will create a giant alignment of all PFAM/SCOP sequences corresponding to these fellows. We will use background frequencies of amino acids and features and use them as pseudo-counts. Those sequences that have pdb structures will be used to bias the emission probability weights where suitable. There will be a lot of aligning and re-aligning going on. So it will help to make sure that all this is taken care off properly.
 
-We use all the sequences and secondary structures of SCOP fold of the protein under consideration. For 1HTM it is the 'Stalk segment of viral fusion proteins' fold. For 1AAY it is 'beta-beta-alpha zinc fingers' fold. 
-While training the HMM we deduplicate all sequence, sec. structure pairs. All X and U amino acids are not considered. We add a 5\% bias to all background to match background frequencies. This is done by : 
-\[
-P(O=a|X=b) = \frac{Count(O=a,X=b)+Count(O=a)\times 0.05}{Count(X=b)+Count(O)\times 0.05}
-\]
 
 
 \subsubsection{Untied SCOP partial- Multistate proteins}

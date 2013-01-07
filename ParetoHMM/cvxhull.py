@@ -11,6 +11,10 @@ from HMM import HMM,CMRF, TMRF
 from pdb import set_trace as stop
 import warnings
 
+def almost_eq(e1,e2) : 
+	""" Check if two elements are almost equal """
+	return round(e1-e2,4) == 0.0
+
 def pareto_frontier(cmrf,featlist) :
 	"""Finds and prints the pareto frontier. Currently works for 
 		two competing states only
@@ -51,7 +55,12 @@ def pareto_frontier(cmrf,featlist) :
 		Eaxab = cmrf.score(Xab,feat1)
 		Ebxab = cmrf.score(Xab,feat2)
 		if Xab != Xa and Xab != Xb and \
-			not taboodict.has_key((Eaxab,Ebxab)): 
+			not taboodict.has_key((Eaxab,Ebxab)) :
+			# Check almost equal condition
+			if any(map(lambda(x):almost_eq(Eaxab,x[0] or \
+				almost_eq(Ebxab,x[1])),taboodict.keys())) : 
+				continue
+					
 			frontier.append(Xab)
 			frontier_energy.append((Eaxab,Ebxab))
 			taboodict[(Eaxab,Ebxab)]=1

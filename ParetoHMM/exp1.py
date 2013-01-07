@@ -28,7 +28,7 @@ DSSP_SYM = ('H','B','E','G','I','T','S','L')
 SEQ_SYM='ACDEFGHIKLMNPQRSTVWY'
 BIAS=0.05
 IGNORE_AA = 'XU'
-
+SAMPLE_N = 10000
 STUDY=1
 
 def build_tied_hmm(self,align_fpath,feats) :
@@ -259,6 +259,7 @@ class BioExp(object) :
 		weights = self.kwdargs['weights']
 		hmm = HMM()
 		self._set_params_ziftied(hmm)
+		#1/0
 		cmrf = CMRF(hmm)
 		for taskid in range(self.ntimes) :	
 			task = Task('bio'+str(STUDY)+'_'+self.name+'_'+str(taskid),cmrf,\
@@ -270,12 +271,19 @@ class BioExp(object) :
 #			task.all_seq_energy = energies
 #			task.brute_time = t.elapsed			
 
+			# Sample the frontier
+			with benchmark(task.name+'sample') as t:
+				seq,energies = self.sample(cmrf,feats)			
+			task.sample_seq = seq
+			task.sample_seq_energy = energies
+			task.sample_time = t.elapsed			
+
 			# Now run the toy simulation`
 			with benchmark(task.name+'pareto') as t : 
 				task.frontier,task.frontier_energy = \
 					pareto_frontier(cmrf,feats)		
 			if self.plot_all :
-				task.plot_frontier(frontier_only = True)
+				task.plot_frontier(frontier_only = True,plot_samples=True)
 			task.pareto_time = t.elapsed
 			self.tasklist.append(task)	
 	
@@ -320,7 +328,23 @@ class BioExp(object) :
 			ll_list2.append(cmrf.score(seq,feat2))
 
 		return seq_list,zip(ll_list1,ll_list2)
-	
+
+	def sample(self,cmrf,feats)  :
+		""" Randomly sample a section of the sequence space """
+		feat1,feat2 = feats
+		ll_list1,ll_list2 = [],[]
+		seqdim = cmrf.dims[0][0]	
+		seqlen = cmrf.length
+		seqspace ='ACDEFGHIKLMNPQRSTVWY'[:seqdim]
+		for i in range(SAMPLE_N):
+			seq = "".join([random.choice(seqspace) for i in range(seqlen)])
+			ll_list1.append(cmrf.score(seq,feat1))
+			ll_list2.append(cmrf.score(seq,feat2))
+
+		return [],zip(ll_list1,ll_list2)
+
+
+		
 
 	def mcmc(self) : 
 		""" Run mcmc on the same problem instance """
@@ -338,8 +362,10 @@ class Task(object) :
 		self.all_seq = None
 		self.all_seq_energy = None
 		self.feats = feats
+		self.sample_seq = None
+		self.sample_seq_energy = None
 	
-	def plot_frontier(self,frontier_only=False) :
+	def plot_frontier(self,frontier_only=False,plot_samples=True) :
 		""" Plot the frontier"""
 		frontier = self.frontier
 		frontier_energy = self.frontier_energy
@@ -349,6 +375,10 @@ class Task(object) :
 		if not frontier_only :	
 			ll_list1,ll_list2 = zip(*self.all_seq_energy)
 			pl.plot(ll_list1,ll_list2,'b*')
+		if plot_samples :
+			ll_list1,ll_list2 = zip(*self.sample_seq_energy)
+			pl.plot(ll_list1,ll_list2,'g*')
+					
 		pl.plot(*zip(*sorted(frontier_energy)),color='magenta',\
 			marker='*',	linestyle='dashed')
 		ctr = dict(zip(set(frontier_energy),[0]*
@@ -356,7 +386,7 @@ class Task(object) :
 		for i,e in enumerate(frontier_energy) : 
 			ctr[e] += 1
 			pl.text(e[0],e[1]+0.1*ctr[e],str(i),fontsize=10)
-			pl.text(e[0]+0.1,e[1]+0.1*ctr[e],frontier[i],fontsize=9)	
+			pl.text(e[0]+0.4,e[1]+0.1*ctr[e],frontier[i],fontsize=9)	
 		pl.xlabel('Energy:'+feat1)
 		pl.ylabel('Energy:'+feat2)
 		pl.title('Energy Plot')
@@ -367,6 +397,7 @@ class Task(object) :
 		pic_dir = '../docs/tex/pics/'
 		pl.savefig(pic_dir+self.name+'.pdf')
 		pl.savefig(pic_dir+self.name+'.png')
+		#pl.show()
 
 class benchmark(object):
 	def __init__(self,name):
@@ -382,7 +413,7 @@ class benchmark(object):
 
 if __name__ == '__main__' : 
 	# Create features
-	p1 = Protein('1HTM',[(13,43)])	
+	p1 = Protein('1HTM',[(13,33)])	
 	p2 = Protein('1AAY',[(3,33)])
 
 	# Read 1htm scop file

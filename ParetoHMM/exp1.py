@@ -413,7 +413,7 @@ class benchmark(object):
 
 if __name__ == '__main__' : 
 	# Create features
-	p1 = Protein('1HTM',[(13,33)])	
+	p1 = Protein('1HTM',[(13,43)])	
 	p2 = Protein('1AAY',[(3,33)])
 
 	# Read 1htm scop file

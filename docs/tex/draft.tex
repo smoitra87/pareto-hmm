@@ -529,7 +529,7 @@ P(X_1,X_2,\dotsc,X_n) &= \frac{1}{Z}\prod_{i=1}^{n} \phi(X_i)\left(\prod_{j=1}^{
 
 \pagebreak
 
-\include{experiments}
+%\include{experiments}
 
 
 \section{Discussion}
@@ -606,7 +606,10 @@ Currently we are unable to provide support for continuous feature spaces.  Perfo
 We can use this for side chain placement by increasing the seq space of a particular amino acid to include rotameric energies. The node and edge potentials can encode energies for side chain placement.
 
 \subsection{Exploring Concavities }
-There might occur situations where the protein sequence lies in the concavities of the sequence space and is not strictly dominated. Strict domination means that the energies lie in the upper right block of all points of the points on the frontier. Figure~\ref{fig:cvxfront3} illustrates the point that there might be points in the interior of the convex frontier found by the algorithm that are not strictly dominated. P1 and P2 are on the convex frontier and the dashed magenta line is the convex hull. Any point in D1 is strictly dominated by P1 and any point in D2 is strictly dominated by P2. Therefore the points P3 and P4 are dominated by P1 and P2. The point P5 on the other hand is not dominated by P1 or P2 and yet is not explored by the algorithm. It does not lie on the convex frontier but it may lie on the pareto frontier. This is because P5 lies in the concavities of the sequence space. There is a way to explore the concavities of the sequence space if so desired. 
+There might occur situations where the protein sequence lies in the concavities of the sequence space and is not strictly dominated. Strict domination means that the energies lie in the upper right block of all points of the points on the frontier. Figure~\ref{fig:cvxfront3} illustrates the point that there might be points in the interior of the convex frontier found by the algorithm that are not strictly dominated. P1 and P2 are on the convex frontier and the dashed magenta line is the convex hull. Any point in D1 is strictly dominated by P1 and any point in D2 is strictly dominated by P2. Therefore the points P3 and P4 are dominated by P1 and P2. The point P5 on the other hand is not dominated by P1 or P2 and yet is not explored by the algorithm. It does not lie on the convex frontier but it may lie on the pareto frontier. This is because P5 lies in the concavities of the sequence space. 
+
+In general, the convex pareto-frontier contains high quality sequences in itself. The convex hull contains sequences that are solutions for all values of $\theta$ for the standard linear multistate design problem $\argmin_X \theta E_A(X)+(1-\theta)E_B(X)$. However, there do lie undominated points in the concavities that maybe worthwhile to explore. Fortunately, there exists a way to explore the concavities as shown previously in a different context by Zheng et.al~\cite{Zheng2009}. The authors apply the convex hull procedure to local sections of the frontier by freezing entities in their dynamic programming problem. We modify their approach in the context of dynamic programming for TMRFs. Basically, the idea is to apply the Pareto-frontier method while keeping a residue to fixed to a certain amino acid. Since max-decoding can still be performed while keeping a node fixed this procedure is feasible. We then iterate over all amino acids and over all residues while performing max-decoding while culling dominated points. This will significantly explore the concavities. Keeping two or more residues fixed will further explore the space but an additional cost. 
+
 
 
 \begin{figure}[h!]

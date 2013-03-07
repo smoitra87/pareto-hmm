@@ -13,40 +13,6 @@ from HMM import HMM,CMRF,TMRF
 from itertools import product
 from cvxhull import pareto_frontier 
 import random
-
-def set_params_hmm1(hmm) : 
-	""" Sets the params of a hmm for sim experiment 1"""
-	hmm.length = 12
-	hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
-	hmm.emit = [
-		[[0.6,0.2,0.2],[0.2,0.6,0.2]]
-	]*hmm.length
-	hmm.trans = [
-		[[0.7,0.3],[0.3,0.7]]
-	]*hmm.length
-	hmm.seqmap = [{'a':0,'b':1}]*hmm.length
-	hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
-	hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
-	hmm.initprob = [0.5,0.5]
-	hmm.trained = True
-
-def set_params_hmm2(hmm) : 
-	""" Sets the params of a hmm for sim experiment 1"""
-	hmm.length = 12
-	hmm.dims = [(2,3)]*hmm.length # (latent,emit) dimspace
-	hmm.emit = [
-		[[0.6,0.2,0.2],[0.2,0.6,0.2]]
-	]*hmm.length
-	hmm.trans = [
-		[[0.7,0.3],[0.3,0.7]]
-	]*hmm.length
-	hmm.seqmap = [{'a':0,'b':1}]*hmm.length
-	hmm.seqmap2 = [{0:'a',1:'b'}]*hmm.length
-	hmm.featmap = [{'H':0,'B':1,'L':2}]*hmm.length
-	hmm.initprob = [0.5,0.5]
-	hmm.trained = True
-
-
 class BoostedHMM(object) :
 	""" Generates boosted HMMs """
 
@@ -58,7 +24,7 @@ class BoostedHMM(object) :
 			seq = "".join(map(lambda x:random.choice('ab'),range(self.length)))
 			self.kseqlist.append(seq)
 
-		self.smoothfac = 0.05
+		self.smoothfac = 0.001
 
 		self.hmm1 = self.learn_hmm(self.kseqlist)	
 		self.hmm2 = self.learn_hmm(self.kseqlist[::-1])
@@ -140,5 +106,5 @@ if __name__ == '__main__' :
 	pl.ylim(-2,ymax)
 	pl.axvline()
 	pl.axhline()
-	pl.savefig('../docs/tex/pics/sim4.png')
+	pl.savefig('../docs/tex/pics/sim4_nosmooth_3.png')
 	pl.show()

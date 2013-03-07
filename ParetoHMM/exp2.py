@@ -644,3 +644,4 @@ if __name__ == '__main__' :
 	sim = BioExp('zifuntied',feats=[p1.des_feat,p2.des_feat],weights=weights,plot_all=True)	
 	sim.execute()	
 #
+
